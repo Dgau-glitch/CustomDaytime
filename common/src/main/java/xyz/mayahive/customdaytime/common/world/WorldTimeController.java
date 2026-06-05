@@ -30,7 +30,9 @@ import xyz.mayahive.customdaytime.common.service.DebugService;
 @RequiredArgsConstructor
 public class WorldTimeController {
 
-    private static final double DEFAULT_ACCELERATION_MULTIPLIER = 300.0;
+    private static final double DEFAULT_FULL_SLEEP_ACCELERATION_MULTIPLIER = 300.0;
+    private static final String FULL_SLEEP_ACCELERATION_MULTIPLIER_KEY = "fullSleepAccelerationMultiplier";
+    private static final String LEGACY_ACCELERATION_MULTIPLIER_KEY = "AccelerationMultiplier";
 
     private final CustomDaytimeContext context;
     private final WorldKey key;
@@ -39,7 +41,7 @@ public class WorldTimeController {
 
     private double dayIncrement;
     private double nightIncrement;
-    private double accelerationMultiplier;
+    private double fullSleepAccelerationMultiplier;
     private long lastObservedWorldTime = -1;
     boolean accelerationEnabled = true;
 
@@ -84,12 +86,15 @@ public class WorldTimeController {
         accelerationEnabled = configService.getConfigValue(Boolean.class, true, key.asString(), "accelerationEnabled");
         double dayMinutes = configService.getConfigValue(Double.class, 10.0, key.asString(), "dayLength");
         double nightMinutes = configService.getConfigValue(Double.class, 10.0, key.asString(), "nightLength");
-        accelerationMultiplier = configService.getConfigValue(Double.class, DEFAULT_ACCELERATION_MULTIPLIER, key.asString(), "AccelerationMultiplier");
+        fullSleepAccelerationMultiplier = configService.getConfigValue(Double.class, Double.NaN, key.asString(), FULL_SLEEP_ACCELERATION_MULTIPLIER_KEY);
+        if (Double.isNaN(fullSleepAccelerationMultiplier)) {
+            fullSleepAccelerationMultiplier = configService.getConfigValue(Double.class, DEFAULT_FULL_SLEEP_ACCELERATION_MULTIPLIER, key.asString(), LEGACY_ACCELERATION_MULTIPLIER_KEY);
+        }
 
         dayIncrement = calculateIncrement(true, dayMinutes, nightMinutes);
         nightIncrement = calculateIncrement(false, dayMinutes, nightMinutes);
 
-        DebugService.log(context, "Reloaded config for world " + key.asString() + " | dayIncrement=" + dayIncrement + " nightIncrement=" + nightIncrement + " accelerationMultiplier=" + accelerationMultiplier);
+        DebugService.log(context, "Reloaded config for world " + key.asString() + " | dayIncrement=" + dayIncrement + " nightIncrement=" + nightIncrement + " fullSleepAccelerationMultiplier=" + fullSleepAccelerationMultiplier);
     }
 
     private void tick() {
@@ -183,12 +188,12 @@ public class WorldTimeController {
         int required = world.gameRulePlayerSleepingPercentage();
 
         if (context.platform().debug()) {
-            context.platform().logger().info("Sleep acceleration check for world " + key.asString() + " (percentage=" + percentage + " / " + required + ", maxMultiplier=" + accelerationMultiplier + ")");
+            context.platform().logger().info("Sleep acceleration check for world " + key.asString() + " (percentage=" + percentage + " / " + required + ", maxMultiplier=" + fullSleepAccelerationMultiplier + ")");
         }
 
         if (percentage < required) return 1.0;
 
-        return Math.max(1.0, accelerationMultiplier * (percentage / 100.0));
+        return Math.max(1.0, fullSleepAccelerationMultiplier * (percentage / 100.0));
     }
 
     private void handleAccelerationEvent(PlatformWorld world, boolean nowAccelerating) {

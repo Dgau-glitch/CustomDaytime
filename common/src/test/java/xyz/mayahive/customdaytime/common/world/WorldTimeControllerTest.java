@@ -29,6 +29,7 @@ import xyz.mayahive.customdaytime.api.platform.PlatformTaskScheduler;
 import xyz.mayahive.customdaytime.api.platform.PlatformWorld;
 import xyz.mayahive.customdaytime.common.context.CustomDaytimeContext;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -94,6 +95,24 @@ class WorldTimeControllerTest {
     }
 
     @Test
+    void supportsLegacyAccelerationMultiplierKey() throws Exception {
+        writeConfig("""
+                "minecraft:overworld" {
+                    dayLength=10.0
+                    nightLength=10.0
+                    accelerationEnabled=true
+                    AccelerationMultiplier=200.0
+                }
+                """);
+        TestContext testContext = contextWithWorld(13_000, 1, 1, 100);
+        new WorldTimeController(testContext.context(), WORLD_KEY).start();
+
+        testContext.scheduler().tickRepeatingTasks();
+
+        assertEquals(13_200, testContext.world().currentTime());
+    }
+
+    @Test
     void resynchronizesAfterExternalTimeChange() {
         TestContext testContext = contextWithWorld(0, 0, 0, 100);
         new WorldTimeController(testContext.context(), WORLD_KEY).start();
@@ -120,6 +139,10 @@ class WorldTimeControllerTest {
 
         manager.start(WORLD_KEY);
         assertEquals(1, testContext.scheduler().activeRepeatingTaskCount());
+    }
+
+    private void writeConfig(String config) throws Exception {
+        Files.writeString(tempDir.resolve("config.conf"), config);
     }
 
     private TestContext contextWithWorld(long time, int players, int sleepingPlayers, int sleepingPercentage) {
