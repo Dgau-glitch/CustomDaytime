@@ -30,6 +30,8 @@ import xyz.mayahive.customdaytime.common.service.DebugService;
 @RequiredArgsConstructor
 public class WorldTimeController {
 
+    private static final double DEFAULT_ACCELERATION_MULTIPLIER = 300.0;
+
     private final CustomDaytimeContext context;
     private final WorldKey key;
     private PlatformTask task;
@@ -82,7 +84,7 @@ public class WorldTimeController {
         accelerationEnabled = configService.getConfigValue(Boolean.class, true, key.asString(), "accelerationEnabled");
         double dayMinutes = configService.getConfigValue(Double.class, 10.0, key.asString(), "dayLength");
         double nightMinutes = configService.getConfigValue(Double.class, 10.0, key.asString(), "nightLength");
-        accelerationMultiplier = configService.getConfigValue(Double.class, 100.0, key.asString(), "AccelerationMultiplier");
+        accelerationMultiplier = configService.getConfigValue(Double.class, DEFAULT_ACCELERATION_MULTIPLIER, key.asString(), "AccelerationMultiplier");
 
         dayIncrement = calculateIncrement(true, dayMinutes, nightMinutes);
         nightIncrement = calculateIncrement(false, dayMinutes, nightMinutes);
@@ -148,13 +150,10 @@ public class WorldTimeController {
         lastCycleTime = currentTime;
 
         double increment = isDay ? dayIncrement : nightIncrement;
+        double effectiveMultiplier = effectiveAccelerationMultiplier(world, isDay);
+        boolean nowAccelerating = effectiveMultiplier > 1.0;
 
-        boolean nowAccelerating = shouldAccelerate(world, isDay);
-
-        if (nowAccelerating) {
-            increment *= accelerationMultiplier;
-        }
-
+        increment *= effectiveMultiplier;
         carry += increment;
 
         long wholeTicks = (long) carry;
@@ -172,22 +171,24 @@ public class WorldTimeController {
         handleAccelerationEvent(world, nowAccelerating);
     }
 
-    private boolean shouldAccelerate(PlatformWorld world, boolean isDay) {
+    private double effectiveAccelerationMultiplier(PlatformWorld world, boolean isDay) {
 
-        if (!accelerationEnabled) return false;
+        if (!accelerationEnabled) return 1.0;
 
-        if (isDay) return false;
+        if (isDay) return 1.0;
 
-        if (totalPlayers == 0) return false;
+        if (totalPlayers == 0 || sleepingPlayers == 0) return 1.0;
 
-        double percentage = ((double) sleepingPlayers / totalPlayers) * 100;
+        double percentage = Math.min(100.0, ((double) sleepingPlayers / totalPlayers) * 100);
         int required = world.gameRulePlayerSleepingPercentage();
 
         if (context.platform().debug()) {
-            context.platform().logger().info("Should Accelerate boolean value for world " + key.asString() + " (percentage=" + percentage + " / " + required + ")");
+            context.platform().logger().info("Sleep acceleration check for world " + key.asString() + " (percentage=" + percentage + " / " + required + ", maxMultiplier=" + accelerationMultiplier + ")");
         }
 
-        return percentage >= required;
+        if (percentage < required) return 1.0;
+
+        return Math.max(1.0, accelerationMultiplier * (percentage / 100.0));
     }
 
     private void handleAccelerationEvent(PlatformWorld world, boolean nowAccelerating) {

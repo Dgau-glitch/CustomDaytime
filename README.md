@@ -56,10 +56,10 @@ Time configuration is applied **per world**. It does not create per-region day/n
   # Default: true
   accelerationEnabled=true
 
-  # Multiplier for night acceleration during sleep
-  # Example: nightLength=10.0 (= 600 seconds) and AccelerationMultiplier=100.0 -> acceleration lasts 6 seconds
-  # Default: 100.0
-  AccelerationMultiplier=100.0
+  # Maximum multiplier for night acceleration when 100% of players sleep
+  # Lower sleep percentages scale this value proportionally; for example, 50% sleeping with AccelerationMultiplier=300.0 uses 150x.
+  # Default: 300.0
+  AccelerationMultiplier=300.0
 }
 ```
 

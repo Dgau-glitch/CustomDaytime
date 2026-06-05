@@ -64,13 +64,33 @@ class WorldTimeControllerTest {
     }
 
     @Test
-    void acceleratesNightWhenSleepingSnapshotMeetsThreshold() {
+    void usesMaximumNightAccelerationWhenAllPlayersSleep() {
         TestContext testContext = contextWithWorld(13_000, 2, 2, 100);
         new WorldTimeController(testContext.context(), WORLD_KEY).start();
 
         testContext.scheduler().tickRepeatingTasks();
 
-        assertEquals(13_100, testContext.world().currentTime());
+        assertEquals(13_300, testContext.world().currentTime());
+    }
+
+    @Test
+    void scalesNightAccelerationBySleepingPlayerPercentage() {
+        TestContext testContext = contextWithWorld(13_000, 4, 2, 50);
+        new WorldTimeController(testContext.context(), WORLD_KEY).start();
+
+        testContext.scheduler().tickRepeatingTasks();
+
+        assertEquals(13_150, testContext.world().currentTime());
+    }
+
+    @Test
+    void doesNotAccelerateNightWhenSleepingSnapshotMissesThreshold() {
+        TestContext testContext = contextWithWorld(13_000, 4, 1, 50);
+        new WorldTimeController(testContext.context(), WORLD_KEY).start();
+
+        testContext.scheduler().tickRepeatingTasks();
+
+        assertEquals(13_001, testContext.world().currentTime());
     }
 
     @Test
