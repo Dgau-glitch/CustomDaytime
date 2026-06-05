@@ -133,6 +133,20 @@ class WorldTimeControllerTest {
     }
 
     @Test
+    void refreshesSleepingSnapshotEveryTick() {
+        TestContext testContext = contextWithWorld(13_000, 1, 0);
+        new WorldTimeController(testContext.context(), WORLD_KEY).start();
+
+        testContext.scheduler().tickRepeatingTasks();
+        assertEquals(13_001, testContext.world().currentTime());
+
+        testContext.world().sleepingPlayerCount(1);
+        testContext.scheduler().tickRepeatingTasks();
+
+        assertEquals(13_301, testContext.world().currentTime());
+    }
+
+    @Test
     void resynchronizesAfterExternalTimeChange() {
         TestContext testContext = contextWithWorld(0, 0, 0);
         new WorldTimeController(testContext.context(), WORLD_KEY).start();
@@ -179,8 +193,8 @@ class WorldTimeControllerTest {
     private static final class TestWorld implements PlatformWorld {
 
         private long currentTime;
-        private final int playerCount;
-        private final int sleepingPlayerCount;
+        private int playerCount;
+        private int sleepingPlayerCount;
 
         private TestWorld(long currentTime, int playerCount, int sleepingPlayerCount) {
             this.currentTime = currentTime;
@@ -231,6 +245,10 @@ class WorldTimeControllerTest {
 
         private void currentTime(long currentTime) {
             this.currentTime = currentTime;
+        }
+
+        private void sleepingPlayerCount(int sleepingPlayerCount) {
+            this.sleepingPlayerCount = sleepingPlayerCount;
         }
     }
 

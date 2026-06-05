@@ -120,6 +120,7 @@ public class WorldTimeController {
 
         world.time().ifPresent(currentTime -> {
             initializeState(world, currentTime);
+            updatePlayerSnapshots(world);
             updateWorld(world, currentTime);
         });
     }
@@ -132,6 +133,11 @@ public class WorldTimeController {
         totalPlayers = world.playerCount();
         sleepingPlayers = world.sleepingPlayerCount();
         initialized = true;
+    }
+
+    private void updatePlayerSnapshots(PlatformWorld world) {
+        totalPlayers = world.playerCount();
+        sleepingPlayers = world.sleepingPlayerCount();
     }
 
     private void updateWorld(PlatformWorld world, long currentTime) {
