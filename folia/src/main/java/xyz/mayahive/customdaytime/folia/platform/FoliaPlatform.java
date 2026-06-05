@@ -26,15 +26,18 @@ import xyz.mayahive.customdaytime.api.platform.Platform;
 import xyz.mayahive.customdaytime.api.platform.PlatformLogger;
 import xyz.mayahive.customdaytime.api.platform.PlatformScheduler;
 import xyz.mayahive.customdaytime.api.platform.PlatformWorld;
+import xyz.mayahive.customdaytime.folia.service.FoliaWorldSnapshotStore;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class FoliaPlatform implements Platform {
 
     private final Plugin plugin;
+    private final FoliaWorldSnapshotStore snapshotStore;
 
     @Override
     public PlatformType platform() {
@@ -67,13 +70,16 @@ public class FoliaPlatform implements Platform {
     }
 
     @Override
-    public PlatformWorld world(WorldKey key) {
-        return new FoliaWorld(plugin.getServer().getWorld(key.asString()));
+    public Optional<PlatformWorld> world(WorldKey key) {
+        return Optional.ofNullable(plugin.getServer().getWorld(key.asString()))
+                .map(world -> new FoliaWorld(world, snapshotStore));
     }
 
     @Override
     public List<PlatformWorld> worlds() {
-        return plugin.getServer().getWorlds().stream().map(FoliaWorld::new).collect(Collectors.toList());
+        return plugin.getServer().getWorlds().stream()
+                .map(world -> new FoliaWorld(world, snapshotStore))
+                .collect(Collectors.toList());
     }
 
     @Override

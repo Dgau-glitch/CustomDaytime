@@ -18,6 +18,8 @@
 package xyz.mayahive.customdaytime.folia.listener;
 
 import lombok.RequiredArgsConstructor;
+import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
@@ -26,25 +28,38 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import xyz.mayahive.customdaytime.common.event.EventBus;
 import xyz.mayahive.customdaytime.common.event.type.WorldPlayerCountChangeEvent;
 import xyz.mayahive.customdaytime.folia.platform.FoliaWorld;
+import xyz.mayahive.customdaytime.folia.service.FoliaWorldSnapshotStore;
 
 @RequiredArgsConstructor
 public class WorldActivityListener implements Listener {
 
     private final EventBus eventBus;
+    private final FoliaWorldSnapshotStore snapshotStore;
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        eventBus.fire(new WorldPlayerCountChangeEvent(new FoliaWorld(event.getPlayer().getWorld())));
+        Player player = event.getPlayer();
+        snapshotStore.playerJoined(player);
+        firePlayerCountChange(player.getWorld());
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        eventBus.fire(new WorldPlayerCountChangeEvent(new FoliaWorld(event.getPlayer().getWorld())));
+        Player player = event.getPlayer();
+        World world = player.getWorld();
+        snapshotStore.playerQuit(player);
+        firePlayerCountChange(world);
     }
 
     @EventHandler
     public void onPlayerChangedWorld(PlayerChangedWorldEvent event) {
-        eventBus.fire(new WorldPlayerCountChangeEvent(new FoliaWorld(event.getFrom())));
-        eventBus.fire(new WorldPlayerCountChangeEvent(new FoliaWorld(event.getPlayer().getWorld())));
+        Player player = event.getPlayer();
+        snapshotStore.playerChangedWorld(player, event.getFrom());
+        firePlayerCountChange(event.getFrom());
+        firePlayerCountChange(player.getWorld());
+    }
+
+    private void firePlayerCountChange(World world) {
+        eventBus.fire(new WorldPlayerCountChangeEvent(new FoliaWorld(world, snapshotStore)));
     }
 }

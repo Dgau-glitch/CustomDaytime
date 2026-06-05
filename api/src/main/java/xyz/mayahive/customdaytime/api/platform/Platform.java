@@ -22,6 +22,7 @@ import xyz.mayahive.customdaytime.api.model.WorldKey;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Represents the current server platform.
@@ -75,9 +76,9 @@ public interface Platform {
      * Returns the {@link PlatformWorld} corresponding to the given WorldKey.
      *
      * @param key the world key
-     * @return the PlatformWorld, or null if not found
+     * @return an Optional containing the PlatformWorld, or empty if not found
      */
-    PlatformWorld world(WorldKey key);
+    Optional<PlatformWorld> world(WorldKey key);
 
 
     /**

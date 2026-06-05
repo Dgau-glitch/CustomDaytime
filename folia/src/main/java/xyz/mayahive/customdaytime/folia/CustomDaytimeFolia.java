@@ -21,6 +21,7 @@ import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import xyz.mayahive.customdaytime.api.platform.Platform;
+import xyz.mayahive.customdaytime.api.platform.PlatformScheduler;
 import xyz.mayahive.customdaytime.common.bootstrap.AbstractBootstrap;
 import xyz.mayahive.customdaytime.common.event.EventBus;
 import xyz.mayahive.customdaytime.common.service.ConfigService;
@@ -29,6 +30,7 @@ import xyz.mayahive.customdaytime.folia.listener.TimeSkipListener;
 import xyz.mayahive.customdaytime.folia.listener.WorldActivityListener;
 import xyz.mayahive.customdaytime.folia.listener.WorldListener;
 import xyz.mayahive.customdaytime.folia.platform.FoliaPlatform;
+import xyz.mayahive.customdaytime.folia.service.FoliaWorldSnapshotStore;
 
 public final class CustomDaytimeFolia extends JavaPlugin {
 
@@ -37,10 +39,12 @@ public final class CustomDaytimeFolia extends JavaPlugin {
 
         new Metrics(this, 26910);
 
+        FoliaWorldSnapshotStore snapshotStore = new FoliaWorldSnapshotStore();
+
         AbstractBootstrap bootstrap = new AbstractBootstrap() {
             @Override
             protected Platform platform() {
-                return new FoliaPlatform(CustomDaytimeFolia.this);
+                return new FoliaPlatform(CustomDaytimeFolia.this, snapshotStore);
             }
         };
 
@@ -48,10 +52,11 @@ public final class CustomDaytimeFolia extends JavaPlugin {
 
         EventBus eventBus = bootstrap.context().eventBus();
         ConfigService configService = bootstrap.context().configService();
+        PlatformScheduler scheduler = bootstrap.context().platform().scheduler();
 
-        Bukkit.getPluginManager().registerEvents(new BedActivityListener(eventBus), this);
+        Bukkit.getPluginManager().registerEvents(new BedActivityListener(eventBus, scheduler, snapshotStore), this);
         Bukkit.getPluginManager().registerEvents(new TimeSkipListener(configService), this);
-        Bukkit.getPluginManager().registerEvents(new WorldActivityListener(eventBus), this);
-        Bukkit.getPluginManager().registerEvents(new WorldListener(eventBus), this);
+        Bukkit.getPluginManager().registerEvents(new WorldActivityListener(eventBus, snapshotStore), this);
+        Bukkit.getPluginManager().registerEvents(new WorldListener(eventBus, snapshotStore), this);
     }
 }

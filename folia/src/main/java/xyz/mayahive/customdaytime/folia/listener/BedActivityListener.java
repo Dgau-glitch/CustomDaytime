@@ -18,30 +18,42 @@
 package xyz.mayahive.customdaytime.folia.listener;
 
 import lombok.RequiredArgsConstructor;
+import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerBedLeaveEvent;
+import xyz.mayahive.customdaytime.api.platform.PlatformScheduler;
 import xyz.mayahive.customdaytime.common.event.EventBus;
 import xyz.mayahive.customdaytime.common.event.type.WorldSleepingPlayerCountChangeEvent;
 import xyz.mayahive.customdaytime.folia.platform.FoliaWorld;
+import xyz.mayahive.customdaytime.folia.service.FoliaWorldSnapshotStore;
 
 @RequiredArgsConstructor
 public class BedActivityListener implements Listener {
 
     private final EventBus eventBus;
+    private final PlatformScheduler scheduler;
+    private final FoliaWorldSnapshotStore snapshotStore;
 
     @EventHandler
     public void onBedEnter(PlayerBedEnterEvent event) {
-        FoliaWorld world = new FoliaWorld(event.getPlayer().getWorld());
-
-        eventBus.fire(new WorldSleepingPlayerCountChangeEvent(world));
+        Player player = event.getPlayer();
+        scheduler.entity(player).runLater(
+                () -> updateSleepingSnapshot(player, player.isSleeping()),
+                1
+        );
     }
 
     @EventHandler
     public void onBedLeave(PlayerBedLeaveEvent event) {
-        FoliaWorld world = new FoliaWorld(event.getPlayer().getWorld());
+        updateSleepingSnapshot(event.getPlayer(), false);
+    }
 
-        eventBus.fire(new WorldSleepingPlayerCountChangeEvent(world));
+    private void updateSleepingSnapshot(Player player, boolean sleeping) {
+        World world = player.getWorld();
+        snapshotStore.sleeping(player, sleeping);
+        eventBus.fire(new WorldSleepingPlayerCountChangeEvent(new FoliaWorld(world, snapshotStore)));
     }
 }

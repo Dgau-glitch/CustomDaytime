@@ -40,7 +40,7 @@ public class WorldTimeManager {
     }
 
     public void stop(WorldKey key) {
-        WorldTimeController controller = controllers.get(key);
+        WorldTimeController controller = controllers.remove(key);
 
         if (controller == null) return;
 

@@ -24,22 +24,25 @@ import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import xyz.mayahive.customdaytime.common.event.EventBus;
 import xyz.mayahive.customdaytime.folia.platform.FoliaWorld;
+import xyz.mayahive.customdaytime.folia.service.FoliaWorldSnapshotStore;
 
 @RequiredArgsConstructor
 public class WorldListener implements Listener {
 
     private final EventBus eventBus;
+    private final FoliaWorldSnapshotStore snapshotStore;
 
     @EventHandler
     public void onWorldLoad(WorldLoadEvent event) {
-        FoliaWorld world = new FoliaWorld(event.getWorld());
+        FoliaWorld world = new FoliaWorld(event.getWorld(), snapshotStore);
         eventBus.fire(new xyz.mayahive.customdaytime.common.event.type.WorldLoadEvent(world));
     }
 
     @EventHandler
     public void onWorldUnload(WorldUnloadEvent event) {
-        FoliaWorld world = new FoliaWorld(event.getWorld());
+        FoliaWorld world = new FoliaWorld(event.getWorld(), snapshotStore);
         eventBus.fire(new xyz.mayahive.customdaytime.common.event.type.WorldUnloadEvent(world));
+        snapshotStore.unregisterWorld(world.key());
     }
 
 }

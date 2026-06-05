@@ -54,18 +54,11 @@ public class WorldTimeController {
     private long lastCycleTime = -1;
     private long baseTime;
     private long accumulatedTicks;
+    private boolean initialized;
 
     public void start() {
         world = context.worldCache().getWorld(key);
         if (world != null) {
-
-            world.time().ifPresent(time -> {
-                baseTime = time;
-                accumulatedTicks = 0;
-            });
-
-            totalPlayers = world.playerCount();
-            sleepingPlayers = world.sleepingPlayerCount();
             DebugService.log(context, "Starting World Time Controller for world: " + key.asString());
         } else {
             DebugService.log(context, "World not loaded yet: " + key.asString());
@@ -99,6 +92,10 @@ public class WorldTimeController {
 
     private void tick() {
         if (world == null) {
+            world = context.worldCache().getWorld(key);
+        }
+
+        if (world == null) {
             DebugService.log(context, "World is null, stopping controller: " + key.asString());
             stop();
             return;
@@ -106,7 +103,20 @@ public class WorldTimeController {
 
         if (!world.gameRuleAdvanceTime()) return;
 
-        world.time().ifPresent(currentTime -> updateWorld(world, currentTime));
+        world.time().ifPresent(currentTime -> {
+            initializeState(world, currentTime);
+            updateWorld(world, currentTime);
+        });
+    }
+
+    private void initializeState(PlatformWorld world, long currentTime) {
+        if (initialized) return;
+
+        baseTime = currentTime;
+        accumulatedTicks = 0;
+        totalPlayers = world.playerCount();
+        sleepingPlayers = world.sleepingPlayerCount();
+        initialized = true;
     }
 
     private void updateWorld(PlatformWorld world, long currentTime) {

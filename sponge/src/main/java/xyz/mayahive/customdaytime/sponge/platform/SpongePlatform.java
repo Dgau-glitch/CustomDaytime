@@ -20,7 +20,6 @@ package xyz.mayahive.customdaytime.sponge.platform;
 import lombok.RequiredArgsConstructor;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.world.server.ServerWorld;
 import xyz.mayahive.customdaytime.api.model.PlatformType;
 import xyz.mayahive.customdaytime.api.model.WorldKey;
 import xyz.mayahive.customdaytime.api.platform.Platform;
@@ -70,11 +69,10 @@ public class SpongePlatform implements Platform {
     }
 
     @Override
-    public PlatformWorld world(WorldKey key) {
+    public Optional<PlatformWorld> world(WorldKey key) {
         ResourceKey worldKey = ResourceKey.of(key.namespace(), key.value());
-        Optional<ServerWorld> world = Sponge.server().worldManager().world(worldKey);
-
-        return new SpongeWorld(world.orElse(null));
+        return Sponge.server().worldManager().world(worldKey)
+                .map(SpongeWorld::new);
     }
 
     @Override

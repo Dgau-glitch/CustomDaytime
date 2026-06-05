@@ -34,14 +34,14 @@ public class WorldActivityListener {
         Platform platform = context.platform();
         PlatformWorld world = event.world();
         WorldKey key = world.key();
-        int totalPlayers = world.playerCount();
-
         context.platform().scheduler().global().runLater(
-                () -> context.worldTimeManager().setTotalPlayers(key, totalPlayers),
+                () -> {
+                    int totalPlayers = world.playerCount();
+                    context.worldTimeManager().setTotalPlayers(key, totalPlayers);
+                    if (platform.debug()) platform.logger().info("Registered WorldPlayerCountChangeEvent. Updated total players count to " + totalPlayers);
+                },
                 1
         );
-
-        if (platform.debug()) platform.logger().info("Registered WorldPlayerCountChangeEvent. Updated total players count to " + totalPlayers);
     }
 
     public void onWorldSleepingPlayerCountChange(WorldSleepingPlayerCountChangeEvent event) {
