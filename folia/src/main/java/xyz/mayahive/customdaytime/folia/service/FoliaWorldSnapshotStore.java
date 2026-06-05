@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FoliaWorldSnapshotStore {
 
     private final ConcurrentHashMap<WorldKey, WorldSnapshot> snapshots = new ConcurrentHashMap<>();
+    private final FoliaPlayerEligibilityService eligibilityService = new FoliaPlayerEligibilityService();
 
     public void registerWorld(World world) {
         snapshots.computeIfAbsent(key(world), ignored -> new WorldSnapshot());
@@ -42,38 +43,37 @@ public class FoliaWorldSnapshotStore {
         snapshots.remove(key);
     }
 
-    public void playerJoined(Player player) {
-        WorldKey key = key(player.getWorld());
-        snapshot(key).players().add(player.getUniqueId());
-    }
-
-    public void playerQuit(Player player) {
-        UUID playerId = player.getUniqueId();
-        snapshots.values().forEach(snapshot -> {
-            snapshot.players().remove(playerId);
-            snapshot.sleepingPlayers().remove(playerId);
-        });
-    }
-
-    public void playerChangedWorld(Player player, World from) {
-        UUID playerId = player.getUniqueId();
-        WorldSnapshot fromSnapshot = snapshot(key(from));
-        fromSnapshot.players().remove(playerId);
-        fromSnapshot.sleepingPlayers().remove(playerId);
-
-        WorldKey toKey = key(player.getWorld());
-        snapshot(toKey).players().add(playerId);
-    }
-
-    public void sleeping(Player player, boolean sleeping) {
+    public void refresh(Player player) {
         WorldKey key = key(player.getWorld());
         WorldSnapshot snapshot = snapshot(key);
         UUID playerId = player.getUniqueId();
-        snapshot.players().add(playerId);
-        if (sleeping) {
+        snapshot.viewers().add(playerId);
+        boolean countable = eligibilityService.shouldCount(player);
+        if (countable) {
+            snapshot.players().add(playerId);
+        } else {
+            snapshot.players().remove(playerId);
+        }
+        if (countable && player.isSleeping()) {
             snapshot.sleepingPlayers().add(playerId);
         } else {
             snapshot.sleepingPlayers().remove(playerId);
+        }
+    }
+
+    public void playerQuit(Player player) {
+        remove(player.getUniqueId());
+    }
+
+    public void playerChangedWorld(Player player, World from) {
+        remove(player.getUniqueId(), key(from));
+        refresh(player);
+    }
+
+    public void sleeping(Player player, boolean sleeping) {
+        refresh(player);
+        if (!sleeping) {
+            snapshot(key(player.getWorld())).sleepingPlayers().remove(player.getUniqueId());
         }
     }
 
@@ -85,19 +85,38 @@ public class FoliaWorldSnapshotStore {
         return snapshot(key).sleepingPlayers().size();
     }
 
+    public Set<UUID> viewerIds(WorldKey key) {
+        return Set.copyOf(snapshot(key).viewers());
+    }
+
+    private void remove(UUID playerId) {
+        snapshots.values().forEach(snapshot -> {
+            snapshot.players().remove(playerId);
+            snapshot.sleepingPlayers().remove(playerId);
+            snapshot.viewers().remove(playerId);
+        });
+    }
+
+    private void remove(UUID playerId, WorldKey key) {
+        WorldSnapshot snapshot = snapshot(key);
+        snapshot.players().remove(playerId);
+        snapshot.sleepingPlayers().remove(playerId);
+        snapshot.viewers().remove(playerId);
+    }
+
     private WorldSnapshot snapshot(WorldKey key) {
         return snapshots.computeIfAbsent(key, ignored -> new WorldSnapshot());
     }
 
-    private static WorldKey key(World world) {
+    public static WorldKey key(World world) {
         Key key = world.getKey();
         return new WorldKey(key.namespace(), key.value());
     }
 
-    private record WorldSnapshot(Set<UUID> players, Set<UUID> sleepingPlayers) {
+    private record WorldSnapshot(Set<UUID> players, Set<UUID> sleepingPlayers, Set<UUID> viewers) {
 
         private WorldSnapshot() {
-            this(ConcurrentHashMap.newKeySet(), ConcurrentHashMap.newKeySet());
+            this(ConcurrentHashMap.newKeySet(), ConcurrentHashMap.newKeySet(), ConcurrentHashMap.newKeySet());
         }
     }
 }

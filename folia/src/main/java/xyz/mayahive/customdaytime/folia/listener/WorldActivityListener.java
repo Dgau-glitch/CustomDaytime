@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import xyz.mayahive.customdaytime.folia.service.FoliaEventAdapter;
@@ -43,5 +44,10 @@ public class WorldActivityListener implements Listener {
     @EventHandler
     public void onPlayerChangedWorld(PlayerChangedWorldEvent event) {
         eventAdapter.playerChangedWorld(event.getPlayer(), event.getFrom());
+    }
+
+    @EventHandler
+    public void onPlayerGameModeChange(PlayerGameModeChangeEvent event) {
+        eventAdapter.playerGameModeChanged(event.getPlayer());
     }
 }

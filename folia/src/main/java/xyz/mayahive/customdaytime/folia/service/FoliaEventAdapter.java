@@ -34,32 +34,39 @@ public class FoliaEventAdapter {
     private final EventBus eventBus;
     private final PlatformScheduler scheduler;
     private final FoliaWorldSnapshotStore snapshotStore;
+    private final FoliaSleepBossBarService bossBarService;
 
     public void worldLoaded(World world) {
         eventBus.fire(new WorldLoadEvent(platformWorld(world)));
+        bossBarService.update(world);
     }
 
     public void worldUnloaded(World world) {
         FoliaWorld platformWorld = platformWorld(world);
         eventBus.fire(new WorldUnloadEvent(platformWorld));
+        bossBarService.hide(platformWorld.key());
         snapshotStore.unregisterWorld(platformWorld.key());
     }
 
     public void playerJoined(Player player) {
-        snapshotStore.playerJoined(player);
+        snapshotStore.refresh(player);
         firePlayerCountChanged(player.getWorld());
+        bossBarService.update(player.getWorld());
     }
 
     public void playerQuit(Player player) {
         World world = player.getWorld();
         snapshotStore.playerQuit(player);
         firePlayerCountChanged(world);
+        bossBarService.update(world);
     }
 
     public void playerChangedWorld(Player player, World from) {
         snapshotStore.playerChangedWorld(player, from);
         firePlayerCountChanged(from);
         firePlayerCountChanged(player.getWorld());
+        bossBarService.update(from);
+        bossBarService.update(player.getWorld());
     }
 
     public void bedEntered(Player player) {
@@ -73,10 +80,26 @@ public class FoliaEventAdapter {
         updateSleepingSnapshot(player, false);
     }
 
+    public void playerGameModeChanged(Player player) {
+        scheduler.entity(player).runLater(
+                () -> updatePlayerSnapshot(player),
+                1
+        );
+    }
+
     private void updateSleepingSnapshot(Player player, boolean sleeping) {
         World world = player.getWorld();
         snapshotStore.sleeping(player, sleeping);
         eventBus.fire(new WorldSleepingPlayerCountChangeEvent(platformWorld(world)));
+        bossBarService.update(world);
+    }
+
+    private void updatePlayerSnapshot(Player player) {
+        World world = player.getWorld();
+        snapshotStore.refresh(player);
+        firePlayerCountChanged(world);
+        eventBus.fire(new WorldSleepingPlayerCountChangeEvent(platformWorld(world)));
+        bossBarService.update(world);
     }
 
     private void firePlayerCountChanged(World world) {

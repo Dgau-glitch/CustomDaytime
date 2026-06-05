@@ -34,9 +34,14 @@ import xyz.mayahive.customdaytime.folia.listener.WorldActivityListener;
 import xyz.mayahive.customdaytime.folia.listener.WorldListener;
 import xyz.mayahive.customdaytime.folia.platform.FoliaPlatform;
 import xyz.mayahive.customdaytime.folia.service.FoliaEventAdapter;
+import xyz.mayahive.customdaytime.folia.service.FoliaPlayerSnapshotRefreshService;
+import xyz.mayahive.customdaytime.folia.service.FoliaSleepBossBarService;
 import xyz.mayahive.customdaytime.folia.service.FoliaWorldSnapshotStore;
 
 public final class CustomDaytimeFolia extends JavaPlugin {
+
+    private FoliaSleepBossBarService bossBarService;
+    private FoliaPlayerSnapshotRefreshService snapshotRefreshService;
 
     @Override
     public void onEnable() {
@@ -57,7 +62,10 @@ public final class CustomDaytimeFolia extends JavaPlugin {
         EventBus eventBus = bootstrap.context().eventBus();
         ConfigService configService = bootstrap.context().configService();
         PlatformScheduler scheduler = bootstrap.context().platform().scheduler();
-        FoliaEventAdapter eventAdapter = new FoliaEventAdapter(eventBus, scheduler, snapshotStore);
+        bossBarService = new FoliaSleepBossBarService(configService, scheduler, snapshotStore);
+        snapshotRefreshService = new FoliaPlayerSnapshotRefreshService(eventBus, scheduler, snapshotStore, bossBarService);
+        snapshotRefreshService.start();
+        FoliaEventAdapter eventAdapter = new FoliaEventAdapter(eventBus, scheduler, snapshotStore, bossBarService);
 
         Bukkit.getPluginManager().registerEvents(new BedActivityListener(eventAdapter), this);
         Bukkit.getPluginManager().registerEvents(new TimeSkipListener(configService), this);
@@ -65,6 +73,16 @@ public final class CustomDaytimeFolia extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new WorldListener(eventAdapter), this);
 
         registerCommands(scheduler, new ReloadService(bootstrap.context()));
+    }
+
+    @Override
+    public void onDisable() {
+        if (snapshotRefreshService != null) {
+            snapshotRefreshService.stop();
+        }
+        if (bossBarService != null) {
+            bossBarService.hideAll();
+        }
     }
 
     private void registerCommands(PlatformScheduler scheduler, ReloadService reloadService) {
