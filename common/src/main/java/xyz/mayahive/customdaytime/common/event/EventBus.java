@@ -17,20 +17,31 @@
 
 package xyz.mayahive.customdaytime.common.event;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import xyz.mayahive.customdaytime.api.platform.PlatformScheduler;
+
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class EventBus {
-    private final Map<Class<?>, List<EventListener<?>>> listeners = new HashMap<>();
+    private final PlatformScheduler scheduler;
+    private final Map<Class<?>, List<EventListener<?>>> listeners = new ConcurrentHashMap<>();
+
+    public EventBus(PlatformScheduler scheduler) {
+        this.scheduler = scheduler;
+    }
 
     public <T extends Event>  void register(Class<T> eventType, EventListener<T> listener) {
-        listeners.computeIfAbsent(eventType, k -> new ArrayList<>()).add(listener);
+        listeners.computeIfAbsent(eventType, k -> new CopyOnWriteArrayList<>()).add(listener);
+    }
+
+    public <T extends Event> void fire(T event) {
+        scheduler.global().run(() -> dispatch(event));
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Event> void fire(T event) {
+    private <T extends Event> void dispatch(T event) {
         List<EventListener<?>> list = listeners.get(event.getClass());
         if (list == null) return;
 

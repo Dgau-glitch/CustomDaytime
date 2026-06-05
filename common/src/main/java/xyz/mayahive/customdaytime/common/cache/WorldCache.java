@@ -22,11 +22,11 @@ import xyz.mayahive.customdaytime.api.model.WorldKey;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class WorldCache {
-    private final Map<WorldKey, PlatformWorld> worldCache = new HashMap<>();
+    private final Map<WorldKey, PlatformWorld> worldCache = new ConcurrentHashMap<>();
 
     public PlatformWorld getWorld(WorldKey identifier) {
         return worldCache.get(identifier);

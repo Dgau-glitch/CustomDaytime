@@ -45,7 +45,6 @@ public class FoliaWorldSnapshotStore {
     public void playerJoined(Player player) {
         WorldKey key = key(player.getWorld());
         snapshot(key).players().add(player.getUniqueId());
-        sleeping(player, player.isSleeping());
     }
 
     public void playerQuit(Player player) {
@@ -64,7 +63,6 @@ public class FoliaWorldSnapshotStore {
 
         WorldKey toKey = key(player.getWorld());
         snapshot(toKey).players().add(playerId);
-        sleeping(player, player.isSleeping());
     }
 
     public void sleeping(Player player, boolean sleeping) {

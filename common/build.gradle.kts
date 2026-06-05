@@ -24,9 +24,18 @@ dependencies {
 
     compileOnlyApi(libs.configurate.hocon)
     compileOnlyApi(libs.gson)
+
+    testImplementation(libs.configurate.hocon)
+    testImplementation(libs.gson)
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 val javaTarget = 21 // Sponge targets a minimum of Java 21
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(javaTarget))
+}
+
+tasks.test {
+    useJUnitPlatform()
 }

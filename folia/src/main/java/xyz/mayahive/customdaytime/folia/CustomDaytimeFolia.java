@@ -30,6 +30,7 @@ import xyz.mayahive.customdaytime.folia.listener.TimeSkipListener;
 import xyz.mayahive.customdaytime.folia.listener.WorldActivityListener;
 import xyz.mayahive.customdaytime.folia.listener.WorldListener;
 import xyz.mayahive.customdaytime.folia.platform.FoliaPlatform;
+import xyz.mayahive.customdaytime.folia.service.FoliaEventAdapter;
 import xyz.mayahive.customdaytime.folia.service.FoliaWorldSnapshotStore;
 
 public final class CustomDaytimeFolia extends JavaPlugin {
@@ -53,10 +54,11 @@ public final class CustomDaytimeFolia extends JavaPlugin {
         EventBus eventBus = bootstrap.context().eventBus();
         ConfigService configService = bootstrap.context().configService();
         PlatformScheduler scheduler = bootstrap.context().platform().scheduler();
+        FoliaEventAdapter eventAdapter = new FoliaEventAdapter(eventBus, scheduler, snapshotStore);
 
-        Bukkit.getPluginManager().registerEvents(new BedActivityListener(eventBus, scheduler, snapshotStore), this);
+        Bukkit.getPluginManager().registerEvents(new BedActivityListener(eventAdapter), this);
         Bukkit.getPluginManager().registerEvents(new TimeSkipListener(configService), this);
-        Bukkit.getPluginManager().registerEvents(new WorldActivityListener(eventBus, snapshotStore), this);
-        Bukkit.getPluginManager().registerEvents(new WorldListener(eventBus, snapshotStore), this);
+        Bukkit.getPluginManager().registerEvents(new WorldActivityListener(eventAdapter), this);
+        Bukkit.getPluginManager().registerEvents(new WorldListener(eventAdapter), this);
     }
 }
