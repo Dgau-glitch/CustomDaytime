@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 25
+          java-version: 21
 
       - name: Determine previous release tag
         id: prev_tag
@@ -37,17 +37,17 @@ jobs:
         with:
           base: ${{ steps.prev_tag.outputs.tag }}
           filters: |
-            paper:
-              - 'paper/**'
+            folia:
+              - 'folia/**'
               - 'common/**'
               - 'api/**'
               - 'gradle/libs.versions.toml'
               - 'build.gradle.kts'
               - 'settings.gradle.kts'
 
-      - name: Publish Paper
-        if: steps.prev_tag.outputs.tag == '' || steps.filter.outputs.paper == 'true'
+      - name: Publish Folia
+        if: steps.prev_tag.outputs.tag == '' || steps.filter.outputs.folia == 'true'
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           CHANGELOG: ${{ github.event.release.body }}
-        run: ./gradlew :paper:modrinth
+        run: ./gradlew -PskipSponge=true :folia:modrinth

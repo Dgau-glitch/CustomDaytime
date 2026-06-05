@@ -18,7 +18,7 @@
 package xyz.mayahive.customdaytime.api.model;
 
 public enum PlatformType {
-    PAPER("paper"),
+    FOLIA("folia"),
     SPONGE("sponge");
 
     private final String displayName;

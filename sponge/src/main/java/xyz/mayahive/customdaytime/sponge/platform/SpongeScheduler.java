@@ -20,10 +20,13 @@ package xyz.mayahive.customdaytime.sponge.platform;
 import lombok.RequiredArgsConstructor;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.scheduler.ScheduledTask;
+import org.spongepowered.api.scheduler.Scheduler;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.util.Ticks;
+import xyz.mayahive.customdaytime.api.model.WorldKey;
 import xyz.mayahive.customdaytime.api.platform.PlatformScheduler;
 import xyz.mayahive.customdaytime.api.platform.PlatformTask;
+import xyz.mayahive.customdaytime.api.platform.PlatformTaskScheduler;
 import xyz.mayahive.customdaytime.sponge.CustomDaytimeSponge;
 
 @RequiredArgsConstructor
@@ -32,19 +35,48 @@ public class SpongeScheduler implements PlatformScheduler {
     private final CustomDaytimeSponge plugin;
 
     @Override
-    public PlatformTask runRepeating(Runnable runnable, long intervalTicks) {
-        ScheduledTask task = Sponge.server().scheduler().submit(Task.builder().plugin(plugin.container()).execute(runnable).interval(Ticks.of(intervalTicks)).build());
-
-        return new SpongeTask(task);
+    public PlatformTaskScheduler global() {
+        return new SpongeTaskScheduler(Sponge.server().scheduler());
     }
 
     @Override
-    public void runLater(Runnable runnable, long delayTicks) {
-        Sponge.server().scheduler().submit(Task.builder().plugin(plugin.container()).execute(runnable).delay(Ticks.of(delayTicks)).build());
+    public PlatformTaskScheduler async() {
+        return new SpongeTaskScheduler(Sponge.asyncScheduler());
     }
 
     @Override
-    public void runTaskAsync(Runnable runnable) {
-        Sponge.asyncScheduler().submit(Task.builder().plugin(plugin.container()).execute(runnable).build());
+    public PlatformTaskScheduler region(WorldKey worldKey, int chunkX, int chunkZ) {
+        return global();
+    }
+
+    @Override
+    public PlatformTaskScheduler entity(Object entityHandle) {
+        return global();
+    }
+
+    @RequiredArgsConstructor
+    private class SpongeTaskScheduler implements PlatformTaskScheduler {
+
+        private final Scheduler scheduler;
+
+        @Override
+        public PlatformTask run(Runnable runnable) {
+            return submit(Task.builder().execute(runnable));
+        }
+
+        @Override
+        public PlatformTask runLater(Runnable runnable, long delayTicks) {
+            return submit(Task.builder().execute(runnable).delay(Ticks.of(delayTicks)));
+        }
+
+        @Override
+        public PlatformTask runRepeating(Runnable runnable, long intervalTicks) {
+            return submit(Task.builder().execute(runnable).interval(Ticks.of(intervalTicks)));
+        }
+
+        private PlatformTask submit(Task.Builder builder) {
+            ScheduledTask task = scheduler.submit(builder.plugin(plugin.container()).build());
+            return new SpongeTask(task);
+        }
     }
 }

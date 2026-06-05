@@ -12,34 +12,33 @@
 
 ## Краткий анализ текущего состояния
 
-- Проект уже разделен на `api`, `common`, `paper`, `sponge`, что удобно для модульной миграции, но текущий Folia-совместимый слой фактически находится в `paper`.
-- В `paper` уже используются Folia scheduler API (`Bukkit.getGlobalRegionScheduler()` и `server.getAsyncScheduler()`), однако модуль компилируется против `io.papermc.paper:paper-api`, а не против `dev.folia:folia-api`.
-- Текущий `PlatformScheduler` описан как “main thread scheduler”, что концептуально неверно для Folia: миры тикают по регионам, а глобальный регион обслуживает время мира, погоду, gamerules, sleep skip и консольные команды.
+- Проект разделен на `api`, `common`, `folia`, `sponge`, что удобно для модульной миграции, а целевой Folia-слой выделен в модуль `folia`.
+- В Folia-слое используются Folia scheduler API (`Bukkit.getGlobalRegionScheduler()` и `server.getAsyncScheduler()`), и модуль должен компилироваться против `dev.folia:folia-api`.
+- Ранее `PlatformScheduler` был описан как “main thread scheduler”, что концептуально неверно для Folia: миры тикают по регионам, а глобальный регион обслуживает время мира, погоду, gamerules, sleep skip и консольные команды.
 - Логика CustomDaytime в основном управляет временем мира (`getFullTime`, `setFullTime`, gamerules, sleep skip), поэтому основным безопасным контекстом для периодического контроллера должен быть `GlobalRegionScheduler`.
-- Текущие адаптеры `PaperWorld` напрямую читают/меняют `World`: это приемлемо только если вызов идет из корректного Folia-контекста. Для полного перехода нужно сделать контекст выполнения явным в API/сервисах.
+- Текущие адаптеры `FoliaWorld` напрямую читают/меняют `World`: это приемлемо только если вызов идет из корректного Folia-контекста. Для полного перехода нужно сделать контекст выполнения явным в API/сервисах.
 - `WorldCache`, `WorldTimeManager` и `EventBus` используют обычные `HashMap`/списки без явной защиты от параллельного доступа. На Folia события игроков/миров могут приходить из разных регионов, поэтому общие структуры должны обновляться через единый безопасный контекст или потокобезопасные коллекции.
 - `WorldActivityListener` сейчас вычисляет `totalPlayers` до отложенного scheduler-вызова, а `sleepingPlayerCount` — внутри него. Для Folia нужно унифицировать это правило и считать состояние мира только в запланированном корректном контексте.
-- В `PaperPlatform.world(WorldKey)` нет null-safe обработки отсутствующего мира: `new PaperWorld(null)` приведет к NPE при первом обращении к `world.key()`/`world.getFullTime()`.
+- В `FoliaPlatform.world(WorldKey)` нет null-safe обработки отсутствующего мира: `new FoliaWorld(null)` приведет к NPE при первом обращении к `world.key()`/`world.getFullTime()`.
 - `WorldTimeManager.stop(WorldKey)` останавливает контроллер, но не удаляет его из `controllers`, из-за чего повторный `start` после unload/load может не создать новый контроллер.
-- Модуль `sponge` блокирует даже выборочную сборку `:paper:build`, потому что Gradle конфигурирует все проекты и SpongeVanilla падает на чтении version manifest. Для итераций по Folia нужен отдельный путь сборки/отключение Sponge.
+- Модуль `sponge` блокирует сборку Folia-слоя без `-PskipSponge=true`, потому что Gradle конфигурирует все проекты и SpongeVanilla падает на чтении version manifest. Для итераций по Folia нужен отдельный путь сборки/отключение Sponge.
 
 ## План задач
 
 Каждый пункт ниже рассчитан как отдельная задача на одно следующее сообщение пользователя. Не объединять пункты без явного запроса, чтобы изменения были маленькими, проверяемыми и не ломали существующий функционал.
 
-### 1. Перевести build-конфигурацию Paper-слоя на Folia API
+### 1. Перевести build-конфигурацию платформенного слоя на Folia API
 
-**Цель:** модуль платформы должен компилироваться против `dev.folia:folia-api:1.21.11-R0.1-SNAPSHOT`, а не маскировать ошибки Paper API.
+**Цель:** модуль платформы должен компилироваться против `dev.folia:folia-api:1.21.11-R0.1-SNAPSHOT`, а не маскировать ошибки через обычный Paper API.
 
 **Что сделать:**
 
 - В `gradle/libs.versions.toml` добавить версию и library alias для `dev.folia:folia-api:1.21.11-R0.1-SNAPSHOT`.
-- В `paper/build.gradle.kts` заменить `compileOnly(libs.paper.api)` на `compileOnly(libs.folia.api)`.
+- В `folia/build.gradle.kts` использовать `compileOnly(libs.folia.api)` вместо Paper API.
 - Проверить, что репозиторий PaperMC Maven остается в `settings.gradle.kts`, так как Folia API публикуется через PaperMC Maven.
-- Переименовывать модуль `paper` пока не нужно: сначала минимально доказать компиляцию на Folia API.
-- Проверить `paper { foliaSupported = true }` и актуальность `apiVersion`/`gameVersions` для 1.21.11/26.1.x.
+- Проверить `paper { foliaSupported = true }` и актуальность `apiVersion`/`gameVersions` для 1.21.11.
 
-**Готовность:** `./gradlew :paper:compileJava` должен проходить или падать только из-за уже известной проблемы конфигурации `:sponge`, которую нужно зафиксировать отдельно.
+**Готовность:** `./gradlew :folia:compileJava` должен проходить или падать только из-за уже известной проблемы конфигурации `:sponge`, которую нужно зафиксировать отдельно.
 
 ### 2. Разблокировать изолированную сборку Folia-модуля без Sponge
 
@@ -48,21 +47,23 @@
 **Что сделать:**
 
 - Добавить Gradle-механизм отключения Sponge-проекта, например через property `-PskipSponge=true` в `settings.gradle.kts` или отдельный included build/profile.
-- Убедиться, что `:api`, `:common`, `:paper`/будущий `:folia` собираются без конфигурации `:sponge`.
+- Убедиться, что `:api`, `:common`, `:folia` собираются без конфигурации `:sponge`.
 - Не удалять Sponge в этой задаче, если нет отдельного решения по отказу от мультиплатформенности.
 - Документировать команду проверки в README или в отдельной dev-документации.
 
-**Готовность:** команда вида `./gradlew -PskipSponge=true :paper:build` проходит конфигурацию и компиляцию Folia-слоя.
+**Готовность:** команда вида `./gradlew -PskipSponge=true :folia:build` проходит конфигурацию и компиляцию Folia-слоя.
 
-### 3. Переименовать Paper-слой в Folia-слой или явно оформить его как Folia-primary
+### 3. Оформить платформенный слой как Folia-primary
 
-**Цель:** убрать архитектурную неоднозначность: runtime target — Folia, а не “Paper с foliaSupported”.
+**Цель:** убрать архитектурную неоднозначность: runtime target — Folia, а не обычный Paper runtime.
 
 **Что сделать:**
 
 - Выбрать стратегию:
-  - минимальная: оставить модуль `paper`, но переименовать пакеты/классы `PaperPlatform`, `PaperScheduler`, `PaperWorld`, `PaperTask` в `FoliaPlatform`, `FoliaScheduler`, `FoliaWorld`, `FoliaTask`;
-  - полная: переименовать модуль `paper` в `folia`, jar `CustomDaytimeFolia`, main class `CustomDaytimeFolia`.
+  - модуль: `folia`;
+  - jar: `CustomDaytimeFolia`;
+  - main class: `CustomDaytimeFolia`;
+  - platform classes: `FoliaPlatform`, `FoliaScheduler`, `FoliaWorld`, `FoliaTask`.
 - Обновить `paper-plugin.yml` generation (`main`, archive name, Modrinth loaders/game versions).
 - Сохранить обратную совместимость артефактов только если она нужна отдельно.
 
@@ -135,7 +136,7 @@
 
 **Что сделать:**
 
-- Вынести повторяющийся код `new PaperWorld(event.getWorld())`/fire common events в отдельный Folia event adapter/service.
+- Вынести повторяющийся код `new FoliaWorld(event.getWorld())`/fire common events в отдельный Folia event adapter/service.
 - Для `PlayerJoinEvent`, `PlayerQuitEvent`, `PlayerChangedWorldEvent`, `PlayerBedEnterEvent`, `PlayerBedLeaveEvent` не читать итоговые счетчики до корректного scheduler-вызова.
 - Учитывать, что `PlayerQuitEvent` может отражать состояние до фактического удаления игрока из мира; считать итоговый snapshot на следующем global tick или использовать явную delta-модель.
 - Проверить отмену `TimeSkipEvent`/`ClockTimeSkipEvent.SkipReason.NIGHT_SKIP` в правильном событии и оставить только один источник логики отмены skip.
@@ -182,7 +183,7 @@
 
 - Обновить README: требования, supported loaders, Java version, Folia-specific notes.
 - Обновить Modrinth metadata: loaders, gameVersions, changelog.
-- Документировать, что обычный Paper может работать только если Folia API совместим в выбранном runtime, либо явно убрать Paper из support matrix.
+- Документировать, что обычный Paper не является целевой runtime-платформой, если отдельно не вводится compatibility-layer.
 - Описать конфиг и ограничения: изменение времени работает по миру, не по отдельным регионам.
 
 **Готовность:** README/metadata согласованы с build.gradle и фактическим jar.

@@ -15,7 +15,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.mayahive.customdaytime.paper.platform;
+package xyz.mayahive.customdaytime.folia.platform;
 
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.key.Key;
@@ -28,7 +28,7 @@ import xyz.mayahive.customdaytime.api.platform.PlatformWorld;
 import java.util.Optional;
 
 @RequiredArgsConstructor
-public class PaperWorld implements PlatformWorld {
+public class FoliaWorld implements PlatformWorld {
 
     private final World world;
 

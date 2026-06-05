@@ -81,7 +81,7 @@ tasks {
     }
 
     shadowJar {
-        archiveBaseName.set("CustomDaytimePaper")
+        archiveBaseName.set("CustomDaytimeFolia")
         archiveClassifier.set("")
         relocate("org.bstats", "xyz.mayahive.libs.bstats")
         relocate("org.spongepowered.configurate", "xyz.mayahive.customdaytime.lib.configurate")
@@ -97,7 +97,7 @@ modrinth {
     versionType.set("release")
     uploadFile.set(tasks.shadowJar)
     gameVersions.addAll("1.21.11")
-    loaders.addAll("paper", "folia", "purpur")
+    loaders.addAll("folia")
     syncBodyFrom = rootProject.file("README.md").readText()
     changelog.set(System.getenv("CHANGELOG").takeUnless { it.isNullOrBlank() } ?: "No changelog provided")
 }
@@ -109,7 +109,7 @@ tasks.modrinth {
 paper {
     name = "CustomDaytime"
     author = "Seedim"
-    main = "xyz.mayahive.customdaytime.paper.CustomDaytimePaper"
+    main = "xyz.mayahive.customdaytime.folia.CustomDaytimeFolia"
     apiVersion = "1.21.11"
     foliaSupported = true
     contributors = listOf("PureLove")

@@ -15,33 +15,36 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.mayahive.customdaytime.paper.listener;
+package xyz.mayahive.customdaytime.folia.listener;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerBedEnterEvent;
-import org.bukkit.event.player.PlayerBedLeaveEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import xyz.mayahive.customdaytime.common.event.EventBus;
-import xyz.mayahive.customdaytime.common.event.type.WorldSleepingPlayerCountChangeEvent;
-import xyz.mayahive.customdaytime.paper.platform.PaperWorld;
+import xyz.mayahive.customdaytime.common.event.type.WorldPlayerCountChangeEvent;
+import xyz.mayahive.customdaytime.folia.platform.FoliaWorld;
 
 @RequiredArgsConstructor
-public class BedActivityListener implements Listener {
+public class WorldActivityListener implements Listener {
 
     private final EventBus eventBus;
 
     @EventHandler
-    public void onBedEnter(PlayerBedEnterEvent event) {
-        PaperWorld world = new PaperWorld(event.getPlayer().getWorld());
-
-        eventBus.fire(new WorldSleepingPlayerCountChangeEvent(world));
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        eventBus.fire(new WorldPlayerCountChangeEvent(new FoliaWorld(event.getPlayer().getWorld())));
     }
 
     @EventHandler
-    public void onBedLeave(PlayerBedLeaveEvent event) {
-        PaperWorld world = new PaperWorld(event.getPlayer().getWorld());
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        eventBus.fire(new WorldPlayerCountChangeEvent(new FoliaWorld(event.getPlayer().getWorld())));
+    }
 
-        eventBus.fire(new WorldSleepingPlayerCountChangeEvent(world));
+    @EventHandler
+    public void onPlayerChangedWorld(PlayerChangedWorldEvent event) {
+        eventBus.fire(new WorldPlayerCountChangeEvent(new FoliaWorld(event.getFrom())));
+        eventBus.fire(new WorldPlayerCountChangeEvent(new FoliaWorld(event.getPlayer().getWorld())));
     }
 }

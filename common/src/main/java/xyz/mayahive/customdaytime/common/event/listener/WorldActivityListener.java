@@ -36,7 +36,7 @@ public class WorldActivityListener {
         WorldKey key = world.key();
         int totalPlayers = world.playerCount();
 
-        context.platform().scheduler().runLater(
+        context.platform().scheduler().global().runLater(
                 () -> context.worldTimeManager().setTotalPlayers(key, totalPlayers),
                 1
         );
@@ -50,7 +50,7 @@ public class WorldActivityListener {
         WorldKey key = world.key();
 
 
-        context.platform().scheduler().runLater(
+        context.platform().scheduler().global().runLater(
                 () -> {
                     int sleepingPlayers = world.sleepingPlayerCount();
                     context.worldTimeManager().setSleepingPlayers(key, sleepingPlayers);

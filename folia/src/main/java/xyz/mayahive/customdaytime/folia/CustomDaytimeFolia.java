@@ -15,7 +15,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.mayahive.customdaytime.paper;
+package xyz.mayahive.customdaytime.folia;
 
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
@@ -24,13 +24,13 @@ import xyz.mayahive.customdaytime.api.platform.Platform;
 import xyz.mayahive.customdaytime.common.bootstrap.AbstractBootstrap;
 import xyz.mayahive.customdaytime.common.event.EventBus;
 import xyz.mayahive.customdaytime.common.service.ConfigService;
-import xyz.mayahive.customdaytime.paper.listener.BedActivityListener;
-import xyz.mayahive.customdaytime.paper.listener.TimeSkipListener;
-import xyz.mayahive.customdaytime.paper.listener.WorldActivityListener;
-import xyz.mayahive.customdaytime.paper.listener.WorldListener;
-import xyz.mayahive.customdaytime.paper.platform.PaperPlatform;
+import xyz.mayahive.customdaytime.folia.listener.BedActivityListener;
+import xyz.mayahive.customdaytime.folia.listener.TimeSkipListener;
+import xyz.mayahive.customdaytime.folia.listener.WorldActivityListener;
+import xyz.mayahive.customdaytime.folia.listener.WorldListener;
+import xyz.mayahive.customdaytime.folia.platform.FoliaPlatform;
 
-public final class CustomDaytimePaper extends JavaPlugin {
+public final class CustomDaytimeFolia extends JavaPlugin {
 
     @Override
     public void onEnable() {
@@ -40,7 +40,7 @@ public final class CustomDaytimePaper extends JavaPlugin {
         AbstractBootstrap bootstrap = new AbstractBootstrap() {
             @Override
             protected Platform platform() {
-                return new PaperPlatform(CustomDaytimePaper.this);
+                return new FoliaPlatform(CustomDaytimeFolia.this);
             }
         };
 

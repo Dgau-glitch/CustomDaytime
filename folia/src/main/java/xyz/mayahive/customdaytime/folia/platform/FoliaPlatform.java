@@ -15,7 +15,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.mayahive.customdaytime.paper.platform;
+package xyz.mayahive.customdaytime.folia.platform;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
@@ -32,13 +32,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
-public class PaperPlatform implements Platform {
+public class FoliaPlatform implements Platform {
 
     private final Plugin plugin;
 
     @Override
     public PlatformType platform() {
-        return PlatformType.PAPER;
+        return PlatformType.FOLIA;
     }
 
     @Override
@@ -58,22 +58,22 @@ public class PaperPlatform implements Platform {
 
     @Override
     public PlatformLogger logger() {
-        return new PaperLogger(plugin);
+        return new FoliaLogger(plugin);
     }
 
     @Override
     public PlatformScheduler scheduler() {
-        return new PaperScheduler(plugin);
+        return new FoliaScheduler(plugin);
     }
 
     @Override
     public PlatformWorld world(WorldKey key) {
-        return new PaperWorld(plugin.getServer().getWorld(key.asString()));
+        return new FoliaWorld(plugin.getServer().getWorld(key.asString()));
     }
 
     @Override
     public List<PlatformWorld> worlds() {
-        return plugin.getServer().getWorlds().stream().map(PaperWorld::new).collect(Collectors.toList());
+        return plugin.getServer().getWorlds().stream().map(FoliaWorld::new).collect(Collectors.toList());
     }
 
     @Override

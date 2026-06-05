@@ -46,7 +46,7 @@ val skipSponge = gradle.startParameter.projectProperties["skipSponge"]
 
 include("api")
 include("common")
-include("paper")
+include("folia")
 
 if (!skipSponge) {
     include("sponge")

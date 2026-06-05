@@ -72,7 +72,7 @@ public class WorldTimeController {
         }
 
         reloadConfig();
-        task = context.platform().scheduler().runRepeating(this::tick, 1);
+        task = context.platform().scheduler().global().runRepeating(this::tick, 1);
     }
 
     public void stop() {

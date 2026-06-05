@@ -46,10 +46,10 @@ Customize Minecraft's day/night cycle and experience smoother nights with this l
 
 ## Development build
 
-For Folia/Paper-layer work, Sponge can be skipped during Gradle configuration so SpongeVanilla does not block the platform module build:
+For Folia-layer work, Sponge can be skipped during Gradle configuration so SpongeVanilla does not block the platform module build:
 
 ```bash
-./gradlew -PskipSponge=true :paper:build
+./gradlew -PskipSponge=true :folia:build
 ```
 
 Use the full multi-module build without `-PskipSponge=true` when Sponge configuration is required.

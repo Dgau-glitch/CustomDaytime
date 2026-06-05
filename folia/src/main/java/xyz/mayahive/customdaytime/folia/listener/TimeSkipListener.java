@@ -15,31 +15,30 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.mayahive.customdaytime.paper.listener;
+package xyz.mayahive.customdaytime.folia.listener;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.world.WorldLoadEvent;
-import org.bukkit.event.world.WorldUnloadEvent;
-import xyz.mayahive.customdaytime.common.event.EventBus;
-import xyz.mayahive.customdaytime.paper.platform.PaperWorld;
+import org.bukkit.event.world.TimeSkipEvent;
+import xyz.mayahive.customdaytime.common.service.ConfigService;
 
 @RequiredArgsConstructor
-public class WorldListener implements Listener {
+public class TimeSkipListener implements Listener {
 
-    private final EventBus eventBus;
-
-    @EventHandler
-    public void onWorldLoad(WorldLoadEvent event) {
-        PaperWorld world = new PaperWorld(event.getWorld());
-        eventBus.fire(new xyz.mayahive.customdaytime.common.event.type.WorldLoadEvent(world));
-    }
+    private final ConfigService configService;
 
     @EventHandler
-    public void onWorldUnload(WorldUnloadEvent event) {
-        PaperWorld world = new PaperWorld(event.getWorld());
-        eventBus.fire(new xyz.mayahive.customdaytime.common.event.type.WorldUnloadEvent(world));
-    }
+    public void onTimeSkipEvent(TimeSkipEvent event) {
+        String worldKey = event.getWorld().key().asString();
+        if (!configService.getRootKeys().contains(worldKey)) {return;}
 
+        boolean accelerationEnabled = configService.getConfigValue(Boolean.class, true, event.getWorld().key().asString(), "accelerationEnabled");
+
+        if (accelerationEnabled) {
+            if (event.getSkipReason().equals(TimeSkipEvent.SkipReason.NIGHT_SKIP)) {
+                event.setCancelled(true);
+            }
+        }
+    }
 }

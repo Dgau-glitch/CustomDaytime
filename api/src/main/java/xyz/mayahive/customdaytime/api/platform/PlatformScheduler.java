@@ -17,31 +17,76 @@
 
 package xyz.mayahive.customdaytime.api.platform;
 
+import xyz.mayahive.customdaytime.api.model.WorldKey;
+
 /**
- * Synchronous scheduler for running tasks on the main thread.
+ * Access point for platform execution contexts.
+ * <p>
+ * Folia does not provide a single main thread for all server state. Callers must
+ * choose the context that owns the data they are going to access: global for
+ * world time, gamerules, weather and sleep skipping; region for chunk/block
+ * state; entity for player/entity state; async for work outside the tick loop.
  */
 public interface PlatformScheduler {
 
     /**
-     * Runs a task repeatedly with the given interval in ticks.
+     * Returns scheduler for global server state such as world time, gamerules,
+     * weather and sleep skipping.
      *
-     * @param runnable the task to execute
-     * @param intervalTicks number of ticks between executions (positive)
-     * @return PlatformTask that can be canceled.
+     * @return global execution context
      */
-    PlatformTask runRepeating(Runnable runnable, long intervalTicks);
+    PlatformTaskScheduler global();
 
     /**
-     * Runs a task once after the given delay in ticks.
+     * Returns scheduler for asynchronous work outside server tick contexts.
      *
-     * @param runnable the task to execute
-     * @param delayTicks number of ticks to wait before execution (non-negative)
+     * @return async execution context
      */
-    void runLater(Runnable runnable, long delayTicks);
+    PlatformTaskScheduler async();
 
     /**
-     * Runs task asynchronously.
-     * @param runnable the task to execute
+     * Returns scheduler for a region that owns the given world chunk.
+     * Do not use this context for entities that can move between regions.
+     *
+     * @param worldKey target world key
+     * @param chunkX target chunk X
+     * @param chunkZ target chunk Z
+     * @return region execution context
      */
-    void runTaskAsync(Runnable runnable);
+    PlatformTaskScheduler region(WorldKey worldKey, int chunkX, int chunkZ);
+
+    /**
+     * Returns scheduler for a platform-native entity or player object.
+     * The object type is intentionally platform-native so platform modules can
+     * bind to their own entity scheduler without leaking those types into the
+     * common API.
+     *
+     * @param entityHandle platform-native entity/player handle
+     * @return entity execution context
+     */
+    PlatformTaskScheduler entity(Object entityHandle);
+
+    /**
+     * @deprecated Use {@link #global()} and choose the Folia global context explicitly.
+     */
+    @Deprecated(forRemoval = true)
+    default PlatformTask runRepeating(Runnable runnable, long intervalTicks) {
+        return global().runRepeating(runnable, intervalTicks);
+    }
+
+    /**
+     * @deprecated Use {@link #global()} and choose the Folia global context explicitly.
+     */
+    @Deprecated(forRemoval = true)
+    default PlatformTask runLater(Runnable runnable, long delayTicks) {
+        return global().runLater(runnable, delayTicks);
+    }
+
+    /**
+     * @deprecated Use {@link #async()} and choose the asynchronous context explicitly.
+     */
+    @Deprecated(forRemoval = true)
+    default PlatformTask runTaskAsync(Runnable runnable) {
+        return async().run(runnable);
+    }
 }
