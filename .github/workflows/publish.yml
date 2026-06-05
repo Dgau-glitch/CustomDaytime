@@ -50,4 +50,4 @@ jobs:
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           CHANGELOG: ${{ github.event.release.body }}
-        run: ./gradlew -PskipSponge=true :folia:modrinth
+        run: ./gradlew --no-daemon -PskipSponge=true :folia:modrinth

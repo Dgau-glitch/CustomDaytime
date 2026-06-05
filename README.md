@@ -68,14 +68,14 @@ Time configuration is applied **per world**. It does not create per-region day/n
 For Folia-layer work, Sponge can be skipped during Gradle configuration so SpongeVanilla does not block the Folia module build:
 
 ```bash
-./gradlew -PskipSponge=true :folia:build
+./gradlew --no-daemon -PskipSponge=true :folia:build
 ```
 
 Useful checks:
 
 ```bash
-./gradlew -PskipSponge=true :common:test
-./gradlew -PskipSponge=true :folia:build
+./gradlew --no-daemon -PskipSponge=true :common:test
+./gradlew --no-daemon -PskipSponge=true :folia:build
 ```
 
 Use the full multi-module build without `-PskipSponge=true` only when Sponge configuration is required.
