@@ -29,7 +29,7 @@ dependencies {
     implementation(libs.bstats.bukkit)
     implementation(libs.configurate.hocon)
 
-    compileOnly(libs.paper.api)
+    compileOnly(libs.folia.api)
     compileOnly(libs.gson)
 }
 
@@ -38,11 +38,11 @@ tasks {
     // Configure the Minecraft version for our task.
     // This is the only required configuration besides applying the plugin.
     // Your plugin's jar (or shadowJar if present) will be used automatically.
-    minecraftVersion("26.1.2")
+    minecraftVersion("1.21.11")
   }
 }
 
-val targetJavaVersion = 25
+val targetJavaVersion = 21
 java {
     val javaVersion = JavaVersion.toVersion(targetJavaVersion)
     sourceCompatibility = javaVersion
@@ -96,7 +96,7 @@ modrinth {
     versionNumber.set(version.toString())
     versionType.set("release")
     uploadFile.set(tasks.shadowJar)
-    gameVersions.addAll("26.1", "26.1.1", "26.1.2")
+    gameVersions.addAll("1.21.11")
     loaders.addAll("paper", "folia", "purpur")
     syncBodyFrom = rootProject.file("README.md").readText()
     changelog.set(System.getenv("CHANGELOG").takeUnless { it.isNullOrBlank() } ?: "No changelog provided")
@@ -110,7 +110,7 @@ paper {
     name = "CustomDaytime"
     author = "Seedim"
     main = "xyz.mayahive.customdaytime.paper.CustomDaytimePaper"
-    apiVersion = "26.1.2"
+    apiVersion = "1.21.11"
     foliaSupported = true
     contributors = listOf("PureLove")
 }

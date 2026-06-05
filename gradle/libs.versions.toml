@@ -1,6 +1,6 @@
 [versions]
 # --- Platform Depencies ---
-paper = "26.1.2.build.+"
+folia = "1.21.11-R0.1-SNAPSHOT"
 run-paper = "3.0.2"
 plugin-yml = "0.9.0"
 spongegradle = "2.3.1-SNAPSHOT"
@@ -20,7 +20,7 @@ shadow = "9.3.1"
 
 [libraries]
 # --- Minecraft Server APIs & Platform Libaries ---
-paper-api = {group = "io.papermc.paper", name = "paper-api", version.ref = "paper"}
+folia-api = {group = "dev.folia", name = "folia-api", version.ref = "folia"}
 bstats-bukkit = {group = "org.bstats", name = "bstats-bukkit", version.ref = "bstats"}
 
 # --- General Java Utilities ---

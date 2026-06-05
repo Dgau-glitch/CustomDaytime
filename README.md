@@ -42,6 +42,17 @@ Customize Minecraft's day/night cycle and experience smoother nights with this l
     # Default: 100.0
     AccelerationMultiplier=100.0
   }
+    ```
+
+## Development build
+
+For Folia/Paper-layer work, Sponge can be skipped during Gradle configuration so SpongeVanilla does not block the platform module build:
+
+```bash
+./gradlew -PskipSponge=true :paper:build
+```
+
+Use the full multi-module build without `-PskipSponge=true` when Sponge configuration is required.
 
 ## License
 This project is licensed under the [GNU General Public License v3.0](https://github.com/SeedimV/CustomDaytime/blob/master/LICENSE). You are free to use, modify, and distribute the project, but any derivative works must also be licensed under the same terms.
