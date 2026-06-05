@@ -84,9 +84,4 @@ public class SpongeWorld implements PlatformWorld {
     public boolean gameRuleAdvanceTime() {
         return world.properties().gameRule(GameRules.ADVANCE_TIME.get());
     }
-
-    @Override
-    public int gameRulePlayerSleepingPercentage() {
-        return world.properties().gameRule(GameRules.PLAYERS_SLEEPING_PERCENTAGE.get());
-    }
 }

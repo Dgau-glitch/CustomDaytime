@@ -82,13 +82,6 @@ public class FoliaWorld implements PlatformWorld {
                 .orElse(false);
     }
 
-    @Override
-    public int gameRulePlayerSleepingPercentage() {
-        int value = currentWorld()
-                .map(world -> world.getGameRuleValue(GameRules.PLAYERS_SLEEPING_PERCENTAGE))
-                .orElse(100);
-        return Math.max(0, Math.min(100, value));
-    }
 
     private Optional<World> currentWorld() {
         return Optional.ofNullable(Bukkit.getWorld(keyAsString));

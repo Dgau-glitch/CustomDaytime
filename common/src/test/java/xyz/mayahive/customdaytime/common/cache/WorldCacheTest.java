@@ -78,9 +78,5 @@ class WorldCacheTest {
             return false;
         }
 
-        @Override
-        public int gameRulePlayerSleepingPercentage() {
-            return 100;
-        }
     }
 }

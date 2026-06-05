@@ -46,7 +46,7 @@ class WorldTimeControllerTest {
 
     @Test
     void advancesDayByConfiguredIncrementOnGlobalTick() {
-        TestContext testContext = contextWithWorld(0, 0, 0, 100);
+        TestContext testContext = contextWithWorld(0, 0, 0);
         new WorldTimeController(testContext.context(), WORLD_KEY).start();
 
         testContext.scheduler().tickRepeatingTasks();
@@ -56,7 +56,7 @@ class WorldTimeControllerTest {
 
     @Test
     void doesNotAccelerateNightWhenThereAreNoPlayers() {
-        TestContext testContext = contextWithWorld(13_000, 0, 0, 0);
+        TestContext testContext = contextWithWorld(13_000, 0, 0);
         new WorldTimeController(testContext.context(), WORLD_KEY).start();
 
         testContext.scheduler().tickRepeatingTasks();
@@ -66,7 +66,7 @@ class WorldTimeControllerTest {
 
     @Test
     void usesMaximumNightAccelerationWhenAllPlayersSleep() {
-        TestContext testContext = contextWithWorld(13_000, 2, 2, 100);
+        TestContext testContext = contextWithWorld(13_000, 2, 2);
         new WorldTimeController(testContext.context(), WORLD_KEY).start();
 
         testContext.scheduler().tickRepeatingTasks();
@@ -76,7 +76,7 @@ class WorldTimeControllerTest {
 
     @Test
     void scalesNightAccelerationBySleepingPlayerPercentage() {
-        TestContext testContext = contextWithWorld(13_000, 4, 2, 50);
+        TestContext testContext = contextWithWorld(13_000, 4, 2);
         new WorldTimeController(testContext.context(), WORLD_KEY).start();
 
         testContext.scheduler().tickRepeatingTasks();
@@ -86,7 +86,26 @@ class WorldTimeControllerTest {
 
     @Test
     void doesNotAccelerateNightWhenSleepingSnapshotMissesThreshold() {
-        TestContext testContext = contextWithWorld(13_000, 4, 1, 50);
+        TestContext testContext = contextWithWorld(13_000, 4, 1);
+        new WorldTimeController(testContext.context(), WORLD_KEY).start();
+
+        testContext.scheduler().tickRepeatingTasks();
+
+        assertEquals(13_001, testContext.world().currentTime());
+    }
+
+    @Test
+    void usesConfiguredSleepingPercentageThreshold() throws Exception {
+        writeConfig("""
+                "minecraft:overworld" {
+                    dayLength=10.0
+                    nightLength=10.0
+                    accelerationEnabled=true
+                    playersSleepingPercentage=75
+                    fullSleepAccelerationMultiplier=1.0
+                }
+                """);
+        TestContext testContext = contextWithWorld(13_000, 4, 2);
         new WorldTimeController(testContext.context(), WORLD_KEY).start();
 
         testContext.scheduler().tickRepeatingTasks();
@@ -101,10 +120,11 @@ class WorldTimeControllerTest {
                     dayLength=10.0
                     nightLength=10.0
                     accelerationEnabled=true
+                    playersSleepingPercentage=50
                     AccelerationMultiplier=200.0
                 }
                 """);
-        TestContext testContext = contextWithWorld(13_000, 1, 1, 100);
+        TestContext testContext = contextWithWorld(13_000, 1, 1);
         new WorldTimeController(testContext.context(), WORLD_KEY).start();
 
         testContext.scheduler().tickRepeatingTasks();
@@ -114,7 +134,7 @@ class WorldTimeControllerTest {
 
     @Test
     void resynchronizesAfterExternalTimeChange() {
-        TestContext testContext = contextWithWorld(0, 0, 0, 100);
+        TestContext testContext = contextWithWorld(0, 0, 0);
         new WorldTimeController(testContext.context(), WORLD_KEY).start();
 
         testContext.scheduler().tickRepeatingTasks();
@@ -126,7 +146,7 @@ class WorldTimeControllerTest {
 
     @Test
     void worldTimeManagerStopIsIdempotentAndAllowsRestart() {
-        TestContext testContext = contextWithWorld(0, 0, 0, 100);
+        TestContext testContext = contextWithWorld(0, 0, 0);
         WorldTimeManager manager = testContext.context().worldTimeManager();
 
         manager.start(WORLD_KEY);
@@ -145,9 +165,9 @@ class WorldTimeControllerTest {
         Files.writeString(tempDir.resolve("config.conf"), config);
     }
 
-    private TestContext contextWithWorld(long time, int players, int sleepingPlayers, int sleepingPercentage) {
+    private TestContext contextWithWorld(long time, int players, int sleepingPlayers) {
         TestScheduler scheduler = new TestScheduler();
-        TestWorld world = new TestWorld(time, players, sleepingPlayers, sleepingPercentage);
+        TestWorld world = new TestWorld(time, players, sleepingPlayers);
         TestPlatform platform = new TestPlatform(tempDir, scheduler);
         CustomDaytimeContext context = new CustomDaytimeContext(platform);
         context.worldCache().registerWorld(world);
@@ -161,13 +181,11 @@ class WorldTimeControllerTest {
         private long currentTime;
         private final int playerCount;
         private final int sleepingPlayerCount;
-        private final int sleepingPercentage;
 
-        private TestWorld(long currentTime, int playerCount, int sleepingPlayerCount, int sleepingPercentage) {
+        private TestWorld(long currentTime, int playerCount, int sleepingPlayerCount) {
             this.currentTime = currentTime;
             this.playerCount = playerCount;
             this.sleepingPlayerCount = sleepingPlayerCount;
-            this.sleepingPercentage = sleepingPercentage;
         }
 
         @Override
@@ -206,10 +224,6 @@ class WorldTimeControllerTest {
             return true;
         }
 
-        @Override
-        public int gameRulePlayerSleepingPercentage() {
-            return sleepingPercentage;
-        }
 
         private long currentTime() {
             return currentTime;

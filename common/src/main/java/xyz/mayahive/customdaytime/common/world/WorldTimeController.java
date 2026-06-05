@@ -30,9 +30,12 @@ import xyz.mayahive.customdaytime.common.service.DebugService;
 @RequiredArgsConstructor
 public class WorldTimeController {
 
-    private static final double DEFAULT_FULL_SLEEP_ACCELERATION_MULTIPLIER = 300.0;
+    private static final double VANILLA_LIKE_SLEEP_SKIP_MULTIPLIER = 300.0;
+    private static final double DEFAULT_FULL_SLEEP_ACCELERATION_MULTIPLIER = 1.0;
+    private static final int DEFAULT_PLAYERS_SLEEPING_PERCENTAGE = 50;
     private static final String FULL_SLEEP_ACCELERATION_MULTIPLIER_KEY = "fullSleepAccelerationMultiplier";
     private static final String LEGACY_ACCELERATION_MULTIPLIER_KEY = "AccelerationMultiplier";
+    private static final String PLAYERS_SLEEPING_PERCENTAGE_KEY = "playersSleepingPercentage";
 
     private final CustomDaytimeContext context;
     private final WorldKey key;
@@ -42,6 +45,7 @@ public class WorldTimeController {
     private double dayIncrement;
     private double nightIncrement;
     private double fullSleepAccelerationMultiplier;
+    private int playersSleepingPercentage;
     private long lastObservedWorldTime = -1;
     boolean accelerationEnabled = true;
 
@@ -86,15 +90,19 @@ public class WorldTimeController {
         accelerationEnabled = configService.getConfigValue(Boolean.class, true, key.asString(), "accelerationEnabled");
         double dayMinutes = configService.getConfigValue(Double.class, 10.0, key.asString(), "dayLength");
         double nightMinutes = configService.getConfigValue(Double.class, 10.0, key.asString(), "nightLength");
+        playersSleepingPercentage = clampPercentage(configService.getConfigValue(Integer.class, DEFAULT_PLAYERS_SLEEPING_PERCENTAGE, key.asString(), PLAYERS_SLEEPING_PERCENTAGE_KEY));
         fullSleepAccelerationMultiplier = configService.getConfigValue(Double.class, Double.NaN, key.asString(), FULL_SLEEP_ACCELERATION_MULTIPLIER_KEY);
         if (Double.isNaN(fullSleepAccelerationMultiplier)) {
-            fullSleepAccelerationMultiplier = configService.getConfigValue(Double.class, DEFAULT_FULL_SLEEP_ACCELERATION_MULTIPLIER, key.asString(), LEGACY_ACCELERATION_MULTIPLIER_KEY);
+            double legacyMultiplier = configService.getConfigValue(Double.class, Double.NaN, key.asString(), LEGACY_ACCELERATION_MULTIPLIER_KEY);
+            fullSleepAccelerationMultiplier = Double.isNaN(legacyMultiplier)
+                    ? DEFAULT_FULL_SLEEP_ACCELERATION_MULTIPLIER
+                    : legacyMultiplier / VANILLA_LIKE_SLEEP_SKIP_MULTIPLIER;
         }
 
         dayIncrement = calculateIncrement(true, dayMinutes, nightMinutes);
         nightIncrement = calculateIncrement(false, dayMinutes, nightMinutes);
 
-        DebugService.log(context, "Reloaded config for world " + key.asString() + " | dayIncrement=" + dayIncrement + " nightIncrement=" + nightIncrement + " fullSleepAccelerationMultiplier=" + fullSleepAccelerationMultiplier);
+        DebugService.log(context, "Reloaded config for world " + key.asString() + " | dayIncrement=" + dayIncrement + " nightIncrement=" + nightIncrement + " playersSleepingPercentage=" + playersSleepingPercentage + " fullSleepAccelerationMultiplier=" + fullSleepAccelerationMultiplier);
     }
 
     private void tick() {
@@ -155,7 +163,7 @@ public class WorldTimeController {
         lastCycleTime = currentTime;
 
         double increment = isDay ? dayIncrement : nightIncrement;
-        double effectiveMultiplier = effectiveAccelerationMultiplier(world, isDay);
+        double effectiveMultiplier = effectiveAccelerationMultiplier(isDay);
         boolean nowAccelerating = effectiveMultiplier > 1.0;
 
         increment *= effectiveMultiplier;
@@ -176,7 +184,7 @@ public class WorldTimeController {
         handleAccelerationEvent(world, nowAccelerating);
     }
 
-    private double effectiveAccelerationMultiplier(PlatformWorld world, boolean isDay) {
+    private double effectiveAccelerationMultiplier(boolean isDay) {
 
         if (!accelerationEnabled) return 1.0;
 
@@ -185,15 +193,18 @@ public class WorldTimeController {
         if (totalPlayers == 0 || sleepingPlayers == 0) return 1.0;
 
         double percentage = Math.min(100.0, ((double) sleepingPlayers / totalPlayers) * 100);
-        int required = world.gameRulePlayerSleepingPercentage();
 
         if (context.platform().debug()) {
-            context.platform().logger().info("Sleep acceleration check for world " + key.asString() + " (percentage=" + percentage + " / " + required + ", maxMultiplier=" + fullSleepAccelerationMultiplier + ")");
+            context.platform().logger().info("Sleep acceleration check for world " + key.asString() + " (percentage=" + percentage + " / " + playersSleepingPercentage + ", scale=" + fullSleepAccelerationMultiplier + ")");
         }
 
-        if (percentage < required) return 1.0;
+        if (percentage < playersSleepingPercentage) return 1.0;
 
-        return Math.max(1.0, fullSleepAccelerationMultiplier * (percentage / 100.0));
+        return Math.max(1.0, VANILLA_LIKE_SLEEP_SKIP_MULTIPLIER * fullSleepAccelerationMultiplier * (percentage / 100.0));
+    }
+
+    private int clampPercentage(int percentage) {
+        return Math.max(0, Math.min(100, percentage));
     }
 
     private void handleAccelerationEvent(PlatformWorld world, boolean nowAccelerating) {

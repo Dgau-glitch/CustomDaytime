@@ -86,13 +86,4 @@ public interface PlatformWorld {
      * @return true if time advances automatically, false otherwise
      */
     boolean gameRuleAdvanceTime();
-
-    /**
-     * Returns the required percentage of players sleeping to skip the night,
-     * if the platform supports this game rule. Must be called from the platform
-     * context that owns gamerules.
-     *
-     * @return a value between 0.0 and 100.0
-     */
-    int gameRulePlayerSleepingPercentage();
 }
