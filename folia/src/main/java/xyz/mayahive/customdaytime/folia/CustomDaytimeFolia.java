@@ -17,6 +17,7 @@
 
 package xyz.mayahive.customdaytime.folia;
 
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -25,6 +26,8 @@ import xyz.mayahive.customdaytime.api.platform.PlatformScheduler;
 import xyz.mayahive.customdaytime.common.bootstrap.AbstractBootstrap;
 import xyz.mayahive.customdaytime.common.event.EventBus;
 import xyz.mayahive.customdaytime.common.service.ConfigService;
+import xyz.mayahive.customdaytime.common.service.ReloadService;
+import xyz.mayahive.customdaytime.folia.command.CustomDaytimeCommand;
 import xyz.mayahive.customdaytime.folia.listener.BedActivityListener;
 import xyz.mayahive.customdaytime.folia.listener.TimeSkipListener;
 import xyz.mayahive.customdaytime.folia.listener.WorldActivityListener;
@@ -60,5 +63,17 @@ public final class CustomDaytimeFolia extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new TimeSkipListener(configService), this);
         Bukkit.getPluginManager().registerEvents(new WorldActivityListener(eventAdapter), this);
         Bukkit.getPluginManager().registerEvents(new WorldListener(eventAdapter), this);
+
+        registerCommands(scheduler, new ReloadService(bootstrap.context()));
+    }
+
+    private void registerCommands(PlatformScheduler scheduler, ReloadService reloadService) {
+        CustomDaytimeCommand command = new CustomDaytimeCommand(this, scheduler, reloadService);
+        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> event.registrar().register(
+                CustomDaytimeCommand.NAME,
+                CustomDaytimeCommand.DESCRIPTION,
+                CustomDaytimeCommand.ALIASES,
+                command
+        ));
     }
 }

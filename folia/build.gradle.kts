@@ -15,6 +15,8 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
+
 plugins {
     id("java")
     alias(libs.plugins.run.paper)
@@ -113,4 +115,9 @@ paper {
     apiVersion = "1.21.11"
     foliaSupported = true
     contributors = listOf("PureLove")
+
+    permissions.register("customdaytime.command.reload") {
+        description = "Allows reloading CustomDaytime configuration"
+        default = BukkitPluginDescription.Permission.Default.OP
+    }
 }

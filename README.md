@@ -63,6 +63,14 @@ Time configuration is applied **per world**. It does not create per-region day/n
 }
 ```
 
+## Commands
+
+| Command | Permission | Description |
+| --- | --- | --- |
+| `/customdaytime reload` (`/cdt reload`) | `customdaytime.command.reload` | Reloads `config.conf`, restarts world time controllers, and resynchronizes loaded worlds without restarting the server. |
+
+Only senders with `customdaytime.command.reload` can see the reload suggestion in tab-completion.
+
 ## Development build
 
 For Folia-layer work, Sponge can be skipped during Gradle configuration so SpongeVanilla does not block the Folia module build:

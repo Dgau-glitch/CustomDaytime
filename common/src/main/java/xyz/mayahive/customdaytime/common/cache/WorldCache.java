@@ -43,4 +43,8 @@ public class WorldCache {
     public Collection<PlatformWorld> getWorlds() {
         return Collections.unmodifiableCollection(worldCache.values());
     }
+
+    public void clear() {
+        worldCache.clear();
+    }
 }
