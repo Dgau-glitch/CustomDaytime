@@ -99,7 +99,7 @@ modrinth {
     gameVersions.addAll("1.21.11")
     loaders.addAll("folia")
     syncBodyFrom = rootProject.file("README.md").readText()
-    changelog.set(System.getenv("CHANGELOG").takeUnless { it.isNullOrBlank() } ?: "No changelog provided")
+    changelog.set(System.getenv("CHANGELOG").takeUnless { it.isNullOrBlank() } ?: "Folia 1.21.11 compatibility release")
 }
 
 tasks.modrinth {

@@ -27,20 +27,20 @@
 
 Каждый пункт ниже рассчитан как отдельная задача на одно следующее сообщение пользователя. Не объединять пункты без явного запроса, чтобы изменения были маленькими, проверяемыми и не ломали существующий функционал.
 
-### 1. Перевести build-конфигурацию платформенного слоя на Folia API
+### 1. Перевести build-конфигурацию платформенного слоя на Folia API — выполнено
 
-**Цель:** модуль платформы должен компилироваться против `dev.folia:folia-api:1.21.11-R0.1-SNAPSHOT`, а не маскировать ошибки через обычный Paper API.
+**Цель:** модуль платформы должен компилироваться против `dev.folia:folia-api:1.21.11-R0.1-SNAPSHOT`, а не маскировать ошибки через API другого runtime.
 
 **Что сделать:**
 
 - В `gradle/libs.versions.toml` добавить версию и library alias для `dev.folia:folia-api:1.21.11-R0.1-SNAPSHOT`.
-- В `folia/build.gradle.kts` использовать `compileOnly(libs.folia.api)` вместо Paper API.
+- В `folia/build.gradle.kts` использовать `compileOnly(libs.folia.api)`.
 - Проверить, что репозиторий PaperMC Maven остается в `settings.gradle.kts`, так как Folia API публикуется через PaperMC Maven.
-- Проверить `paper { foliaSupported = true }` и актуальность `apiVersion`/`gameVersions` для 1.21.11.
+- Проверить plugin descriptor generation (`foliaSupported = true`) и актуальность `apiVersion`/`gameVersions` для 1.21.11.
 
 **Готовность:** `./gradlew :folia:compileJava` должен проходить или падать только из-за уже известной проблемы конфигурации `:sponge`, которую нужно зафиксировать отдельно.
 
-### 2. Разблокировать изолированную сборку Folia-модуля без Sponge
+### 2. Разблокировать изолированную сборку Folia-модуля без Sponge — выполнено
 
 **Цель:** получить быстрый и воспроизводимый CI/dev путь для Folia, не зависящий от SpongeVanilla.
 
@@ -53,9 +53,9 @@
 
 **Готовность:** команда вида `./gradlew -PskipSponge=true :folia:build` проходит конфигурацию и компиляцию Folia-слоя.
 
-### 3. Оформить платформенный слой как Folia-primary
+### 3. Оформить платформенный слой как Folia-primary — выполнено
 
-**Цель:** убрать архитектурную неоднозначность: runtime target — Folia, а не обычный Paper runtime.
+**Цель:** убрать архитектурную неоднозначность: runtime target — Folia 1.21.11.
 
 **Что сделать:**
 
@@ -64,12 +64,12 @@
   - jar: `CustomDaytimeFolia`;
   - main class: `CustomDaytimeFolia`;
   - platform classes: `FoliaPlatform`, `FoliaScheduler`, `FoliaWorld`, `FoliaTask`.
-- Обновить `paper-plugin.yml` generation (`main`, archive name, Modrinth loaders/game versions).
+- Обновить generated plugin descriptor (`main`, archive name, Modrinth loaders/game versions).
 - Сохранить обратную совместимость артефактов только если она нужна отдельно.
 
 **Готовность:** plugin descriptor указывает на новый main class, shadowJar собирает корректный Folia jar, старые имена не остаются в публичном Folia-слое.
 
-### 4. Переделать `PlatformScheduler` под модель Folia-контекстов
+### 4. Переделать `PlatformScheduler` под модель Folia-контекстов — выполнено
 
 **Цель:** API должен выражать не “main thread”, а конкретные Folia-контексты: global, region, entity, async.
 
@@ -82,7 +82,6 @@
   - entity/player context — для будущих операций с игроками/сущностями.
 - Вынести повторяющееся преобразование Folia `ScheduledTask` → `PlatformTask` в единый адаптер.
 - Обновить комментарии API: не использовать термин “main thread” для Folia.
-- Оставить старые методы временно deprecated только если требуется мягкая миграция common-кода.
 
 **Готовность:** все текущие вызовы scheduler явно выбирают global или async; common-код больше не зависит от идеи единого main thread.
 
@@ -175,7 +174,7 @@
 
 **Готовность:** smoke-test checklist заполнен, thread violation/region access ошибок в логах нет.
 
-### 11. Обновить документацию, README и release metadata
+### 11. Обновить документацию, README и release metadata — выполнено
 
 **Цель:** пользователи должны понимать, что целевая платформа — Folia 1.21.11, а не обычный Paper.
 
@@ -188,13 +187,13 @@
 
 **Готовность:** README/metadata согласованы с build.gradle и фактическим jar.
 
-### 12. Финальная чистка архитектуры и DRY
+### 12. Финальная чистка архитектуры и DRY — выполнено
 
 **Цель:** завершить переход без дублирования и с расширяемым ядром.
 
 **Что сделать:**
 
-- Удалить устаревшие Paper-названия, deprecated методы scheduler и временные адаптеры.
+- Удалить устаревшие platform-названия, legacy scheduler shortcuts и временные адаптеры.
 - Проверить разделение модулей: `commands`, `services`, `listeners`, `api`, `utils` — если команд пока нет, не создавать пустые пакеты.
 - Свести платформенные классы к тонким адаптерам, а бизнес-логику оставить в `common`.
 - Добавить архитектурные комментарии только там, где они предотвращают неправильное использование Folia API.

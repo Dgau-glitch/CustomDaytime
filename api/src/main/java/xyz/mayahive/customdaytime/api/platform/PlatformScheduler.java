@@ -65,28 +65,4 @@ public interface PlatformScheduler {
      * @return entity execution context
      */
     PlatformTaskScheduler entity(Object entityHandle);
-
-    /**
-     * @deprecated Use {@link #global()} and choose the Folia global context explicitly.
-     */
-    @Deprecated(forRemoval = true)
-    default PlatformTask runRepeating(Runnable runnable, long intervalTicks) {
-        return global().runRepeating(runnable, intervalTicks);
-    }
-
-    /**
-     * @deprecated Use {@link #global()} and choose the Folia global context explicitly.
-     */
-    @Deprecated(forRemoval = true)
-    default PlatformTask runLater(Runnable runnable, long delayTicks) {
-        return global().runLater(runnable, delayTicks);
-    }
-
-    /**
-     * @deprecated Use {@link #async()} and choose the asynchronous context explicitly.
-     */
-    @Deprecated(forRemoval = true)
-    default PlatformTask runTaskAsync(Runnable runnable) {
-        return async().run(runnable);
-    }
 }

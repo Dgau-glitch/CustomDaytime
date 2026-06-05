@@ -30,7 +30,7 @@ import java.util.Optional;
 public interface Platform {
 
     /**
-     * Returns the name of the platform/loader (e.g., "Paper", "Folia", "Fabric").
+     * Returns the name of the platform/loader (e.g., "Folia", "Sponge", "Fabric").
      *
      * @return the platform name
      */
