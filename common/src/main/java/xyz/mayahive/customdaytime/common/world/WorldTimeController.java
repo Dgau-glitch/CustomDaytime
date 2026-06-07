@@ -168,6 +168,13 @@ public class WorldTimeController {
 
         lastCycleTime = currentTime;
 
+        boolean shouldCompleteNightSkip = shouldCompleteNightSkip(isDay);
+        if (shouldCompleteNightSkip) {
+            completeNightSkip(world, currentTime);
+            handleAccelerationEvent(world, false);
+            return;
+        }
+
         double increment = isDay ? dayIncrement : nightIncrement;
         double effectiveMultiplier = effectiveAccelerationMultiplier(isDay);
         boolean nowAccelerating = effectiveMultiplier > 1.0;
@@ -188,6 +195,27 @@ public class WorldTimeController {
         }
 
         handleAccelerationEvent(world, nowAccelerating);
+    }
+
+    private boolean shouldCompleteNightSkip(boolean isDay) {
+        return accelerationEnabled
+                && !isDay
+                && totalPlayers > 0
+                && sleepingPlayers >= totalPlayers;
+    }
+
+    private void completeNightSkip(PlatformWorld world, long currentTime) {
+        long nextDayTime = currentTime + (24000 - (currentTime % 24000));
+        if (!world.time(nextDayTime)) {
+            context.platform().logger().error("Failed to skip night for world " + key.asString());
+            return;
+        }
+        baseTime = nextDayTime;
+        accumulatedTicks = 0;
+        carry = 0;
+        lastObservedWorldTime = nextDayTime;
+        lastCycleTime = nextDayTime;
+        DebugService.log(context, "Night skipped for world " + world.keyAsString() + " because all counted players are sleeping.");
     }
 
     private double effectiveAccelerationMultiplier(boolean isDay) {

@@ -65,13 +65,13 @@ class WorldTimeControllerTest {
     }
 
     @Test
-    void usesMaximumNightAccelerationWhenAllPlayersSleep() {
+    void skipsNightWhenAllCountedPlayersSleep() {
         TestContext testContext = contextWithWorld(13_000, 2, 2);
         new WorldTimeController(testContext.context(), WORLD_KEY).start();
 
         testContext.scheduler().tickRepeatingTasks();
 
-        assertEquals(13_300, testContext.world().currentTime());
+        assertEquals(24_000, testContext.world().currentTime());
     }
 
     @Test
@@ -124,12 +124,12 @@ class WorldTimeControllerTest {
                     AccelerationMultiplier=200.0
                 }
                 """);
-        TestContext testContext = contextWithWorld(13_000, 1, 1);
+        TestContext testContext = contextWithWorld(13_000, 2, 1);
         new WorldTimeController(testContext.context(), WORLD_KEY).start();
 
         testContext.scheduler().tickRepeatingTasks();
 
-        assertEquals(13_200, testContext.world().currentTime());
+        assertEquals(13_100, testContext.world().currentTime());
     }
 
     @Test
@@ -143,7 +143,7 @@ class WorldTimeControllerTest {
         testContext.world().sleepingPlayerCount(1);
         testContext.scheduler().tickRepeatingTasks();
 
-        assertEquals(13_301, testContext.world().currentTime());
+        assertEquals(24_000, testContext.world().currentTime());
     }
 
     @Test
