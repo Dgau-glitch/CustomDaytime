@@ -15,36 +15,39 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.mayahive.customdaytime.paper.listener;
+package xyz.mayahive.customdaytime.folia.listener;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import xyz.mayahive.customdaytime.common.event.EventBus;
-import xyz.mayahive.customdaytime.common.event.type.WorldPlayerCountChangeEvent;
-import xyz.mayahive.customdaytime.paper.platform.PaperWorld;
+import xyz.mayahive.customdaytime.folia.service.FoliaEventAdapter;
 
 @RequiredArgsConstructor
 public class WorldActivityListener implements Listener {
 
-    private final EventBus eventBus;
+    private final FoliaEventAdapter eventAdapter;
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        eventBus.fire(new WorldPlayerCountChangeEvent(new PaperWorld(event.getPlayer().getWorld())));
+        eventAdapter.playerJoined(event.getPlayer());
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        eventBus.fire(new WorldPlayerCountChangeEvent(new PaperWorld(event.getPlayer().getWorld())));
+        eventAdapter.playerQuit(event.getPlayer());
     }
 
     @EventHandler
     public void onPlayerChangedWorld(PlayerChangedWorldEvent event) {
-        eventBus.fire(new WorldPlayerCountChangeEvent(new PaperWorld(event.getFrom())));
-        eventBus.fire(new WorldPlayerCountChangeEvent(new PaperWorld(event.getPlayer().getWorld())));
+        eventAdapter.playerChangedWorld(event.getPlayer(), event.getFrom());
+    }
+
+    @EventHandler
+    public void onPlayerGameModeChange(PlayerGameModeChangeEvent event) {
+        eventAdapter.playerGameModeChanged(event.getPlayer());
     }
 }

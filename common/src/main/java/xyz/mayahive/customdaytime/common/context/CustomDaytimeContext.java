@@ -46,6 +46,6 @@ public class CustomDaytimeContext {
         this.worldCache = new WorldCache();
         this.configService = new ConfigService(platform);
         this.worldTimeManager = new WorldTimeManager(this);
-        this.eventBus = new EventBus();
+        this.eventBus = new EventBus(platform.scheduler());
     }
 }

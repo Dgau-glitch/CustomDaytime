@@ -15,14 +15,14 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.mayahive.customdaytime.paper.platform;
+package xyz.mayahive.customdaytime.folia.platform;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.plugin.Plugin;
 import xyz.mayahive.customdaytime.api.platform.PlatformLogger;
 
 @RequiredArgsConstructor
-public class PaperLogger implements PlatformLogger {
+public class FoliaLogger implements PlatformLogger {
 
     private final Plugin plugin;
 

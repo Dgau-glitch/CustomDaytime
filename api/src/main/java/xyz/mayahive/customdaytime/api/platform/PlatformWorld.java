@@ -23,7 +23,13 @@ import java.util.Optional;
 
 /**
  * Represents a world in a platform-agnostic way.
- * Provides access to world properties such as players, and game rules across different loaders.
+ * <p>
+ * The key methods are immutable identity and can be used from common logic.
+ * State methods must be called from the scheduler context that owns the
+ * relevant platform state. On Folia, world time and gamerules belong to
+ * {@link PlatformScheduler#global()}, while player/sleeping counts should be
+ * provided by platform snapshots instead of iterating entities from arbitrary
+ * contexts.
  */
 public interface PlatformWorld {
 
@@ -43,6 +49,7 @@ public interface PlatformWorld {
 
     /**
      * Returns the current time of the world if available.
+     * Must be called from the platform context that owns world time.
      *
      * @return an Optional containing the world time, or empty if unavailable
      */
@@ -50,6 +57,7 @@ public interface PlatformWorld {
 
     /**
      * Sets the current time of the world.
+     * Must be called from the platform context that owns world time.
      *
      * @param time the new time value
      * @return true if the time was successfully set, false otherwise
@@ -58,14 +66,14 @@ public interface PlatformWorld {
 
 
     /**
-     * Returns number of players in this world.
+     * Returns a platform-maintained player count snapshot for this world.
      *
      * @return player count
      */
     int playerCount();
 
     /**
-     * Returns number of sleeping players in this world.
+     * Returns a platform-maintained sleeping player count snapshot for this world.
      *
      * @return number of sleeping players
      */
@@ -73,16 +81,9 @@ public interface PlatformWorld {
 
     /**
      * Returns whether the "doDaylightCycle" or equivalent game rule is enabled.
+     * Must be called from the platform context that owns gamerules.
      *
      * @return true if time advances automatically, false otherwise
      */
     boolean gameRuleAdvanceTime();
-
-    /**
-     * Returns the required percentage of players sleeping to skip the night,
-     * if the platform supports this game rule.
-     *
-     * @return a value between 0.0 and 100.0
-     */
-    int gameRulePlayerSleepingPercentage();
 }

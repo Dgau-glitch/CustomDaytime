@@ -15,19 +15,20 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.mayahive.customdaytime.api.model;
+package xyz.mayahive.customdaytime.common.service;
 
-public enum PlatformType {
-    FOLIA("folia"),
-    SPONGE("sponge");
+import lombok.RequiredArgsConstructor;
+import xyz.mayahive.customdaytime.common.context.CustomDaytimeContext;
 
-    private final String displayName;
+@RequiredArgsConstructor
+public class ReloadService {
 
-    PlatformType(String displayName) {
-        this.displayName = displayName;
-    }
+    private final CustomDaytimeContext context;
 
-    public String displayName() {
-        return displayName;
+    public void reload() {
+        context.configService().reload();
+        context.worldTimeManager().stopAll();
+        context.worldCache().clear();
+        new WorldInitializationService(context).syncExistingWorlds();
     }
 }

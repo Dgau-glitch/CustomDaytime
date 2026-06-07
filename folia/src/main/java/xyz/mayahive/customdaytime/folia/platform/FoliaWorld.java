@@ -15,74 +15,80 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.mayahive.customdaytime.paper.platform;
+package xyz.mayahive.customdaytime.folia.platform;
 
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.key.Key;
+import org.bukkit.Bukkit;
 import org.bukkit.GameRules;
 import org.bukkit.World;
-import org.bukkit.entity.Player;
 import xyz.mayahive.customdaytime.api.model.WorldKey;
 import xyz.mayahive.customdaytime.api.platform.PlatformWorld;
+import xyz.mayahive.customdaytime.folia.service.FoliaWorldSnapshotStore;
 
 import java.util.Optional;
 
 @RequiredArgsConstructor
-public class PaperWorld implements PlatformWorld {
+public class FoliaWorld implements PlatformWorld {
 
-    private final World world;
+    private final WorldKey key;
+    private final String keyAsString;
+    private final FoliaWorldSnapshotStore snapshotStore;
+
+    public FoliaWorld(World world, FoliaWorldSnapshotStore snapshotStore) {
+        this(key(world), world.getKey().asString(), snapshotStore);
+        snapshotStore.registerWorld(world);
+    }
 
     @Override
     public WorldKey key() {
-        Key key = world.getKey();
-        return new WorldKey(key.namespace(), key.value());
+        return key;
     }
 
     @Override
     public String keyAsString() {
-        return world.getKey().asString();
+        return keyAsString;
     }
 
     @Override
     public Optional<Long> time() {
-        return Optional.of(world.getFullTime());
+        return currentWorld().map(World::getFullTime);
     }
 
     @Override
     public boolean time(long time) {
-        if (world == null) {
+        Optional<World> world = currentWorld();
+        if (world.isEmpty()) {
             return false;
         }
-        world.setFullTime(time);
+        world.get().setFullTime(time);
         return true;
     }
 
     @Override
     public int playerCount() {
-        return world.getPlayerCount();
+        return snapshotStore.playerCount(key);
     }
 
     @Override
     public int sleepingPlayerCount() {
-        int count = 0;
-
-        for (Player player : world.getPlayers()) {
-            if (player.isSleeping()) {
-                count++;
-            }
-        }
-
-        return count;
+        return snapshotStore.sleepingPlayerCount(key);
     }
 
     @Override
     public boolean gameRuleAdvanceTime() {
-        return Boolean.TRUE.equals(world.getGameRuleValue(GameRules.ADVANCE_TIME));
+        return currentWorld()
+                .map(world -> Boolean.TRUE.equals(world.getGameRuleValue(GameRules.ADVANCE_TIME)))
+                .orElse(false);
     }
 
-    @Override
-    public int gameRulePlayerSleepingPercentage() {
-        int value = Optional.ofNullable(world.getGameRuleValue(GameRules.PLAYERS_SLEEPING_PERCENTAGE)).orElse(100);
-        return Math.max(0, Math.min(100, value));
+
+    private Optional<World> currentWorld() {
+        return Optional.ofNullable(Bukkit.getWorld(keyAsString));
+    }
+
+    private static WorldKey key(World world) {
+        Key key = world.getKey();
+        return new WorldKey(key.namespace(), key.value());
     }
 }

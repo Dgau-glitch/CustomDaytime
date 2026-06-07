@@ -36,7 +36,7 @@ public class ConfigService {
 
     private final Platform platform;
     private final PlatformLogger logger;
-    private final CommentedConfigurationNode rootNode;
+    private volatile CommentedConfigurationNode rootNode;
 
     final HoconConfigurationLoader loader;
 
@@ -87,6 +87,10 @@ public class ConfigService {
         } catch (SerializationException e) {
             logger.error("An error occurred while loading configuration value: " + e.getMessage());
         }
+    }
+
+    public void reload() {
+        rootNode = loadConfig();
     }
 
     public void saveConfig() {

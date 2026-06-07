@@ -15,12 +15,11 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.mayahive.customdaytime.paper.listener;
+package xyz.mayahive.customdaytime.folia.listener;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.world.ClockTimeSkipEvent;
 import org.bukkit.event.world.TimeSkipEvent;
 import xyz.mayahive.customdaytime.common.service.ConfigService;
 
@@ -37,7 +36,7 @@ public class TimeSkipListener implements Listener {
         boolean accelerationEnabled = configService.getConfigValue(Boolean.class, true, event.getWorld().key().asString(), "accelerationEnabled");
 
         if (accelerationEnabled) {
-            if (event.getSkipReason().equals(ClockTimeSkipEvent.SkipReason.NIGHT_SKIP)) {
+            if (event.getSkipReason().equals(TimeSkipEvent.SkipReason.NIGHT_SKIP)) {
                 event.setCancelled(true);
             }
         }

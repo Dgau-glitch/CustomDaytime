@@ -15,16 +15,25 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.mayahive.customdaytime.paper.platform;
+package xyz.mayahive.customdaytime.folia.platform;
 
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import lombok.RequiredArgsConstructor;
 import xyz.mayahive.customdaytime.api.platform.PlatformTask;
 
 @RequiredArgsConstructor
-public class PaperTask implements PlatformTask {
+public class FoliaTask implements PlatformTask {
+
+    private static final PlatformTask NO_OP = () -> { };
 
     private final ScheduledTask task;
+
+    public static PlatformTask from(ScheduledTask task) {
+        if (task == null) {
+            return NO_OP;
+        }
+        return new FoliaTask(task);
+    }
 
     @Override
     public void cancel() {

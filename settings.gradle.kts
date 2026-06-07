@@ -39,7 +39,15 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "customdaytime"
+
+val skipSponge = gradle.startParameter.projectProperties["skipSponge"]
+    ?.toBooleanStrictOrNull()
+    ?: false
+
 include("api")
 include("common")
-include("paper")
-include("sponge")
+include("folia")
+
+if (!skipSponge) {
+    include("sponge")
+}

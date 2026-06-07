@@ -15,19 +15,26 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package xyz.mayahive.customdaytime.api.model;
+package xyz.mayahive.customdaytime.folia.service;
 
-public enum PlatformType {
-    FOLIA("folia"),
-    SPONGE("sponge");
+import org.bukkit.GameMode;
+import org.bukkit.entity.Player;
 
-    private final String displayName;
+import java.util.Locale;
 
-    PlatformType(String displayName) {
-        this.displayName = displayName;
+public class FoliaPlayerEligibilityService {
+
+    public boolean shouldCount(Player player) {
+        return player.getGameMode() != GameMode.SPECTATOR
+                && !player.isOp()
+                && !hasTag(player, "afk")
+                && !hasTag(player, "vanished")
+                && !hasTag(player, "vanish");
     }
 
-    public String displayName() {
-        return displayName;
+    private boolean hasTag(Player player, String marker) {
+        return player.getScoreboardTags().stream()
+                .map(tag -> tag.toLowerCase(Locale.ROOT))
+                .anyMatch(marker::equals);
     }
 }

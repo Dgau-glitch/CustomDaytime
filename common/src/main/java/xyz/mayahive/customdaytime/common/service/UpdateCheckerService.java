@@ -42,7 +42,7 @@ public class UpdateCheckerService {
     }
 
     private void checkUpdatesAsync() {
-        platform.scheduler().runTaskAsync(this::checkUpdates);
+        platform.scheduler().async().run(this::checkUpdates);
     }
 
     private void checkUpdates() {

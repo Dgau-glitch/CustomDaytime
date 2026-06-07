@@ -21,26 +21,21 @@ import lombok.RequiredArgsConstructor;
 import xyz.mayahive.customdaytime.api.model.WorldKey;
 import xyz.mayahive.customdaytime.common.context.CustomDaytimeContext;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RequiredArgsConstructor
 public class WorldTimeManager {
 
     private final CustomDaytimeContext context;
-    private final Map<WorldKey, WorldTimeController> controllers = new HashMap<>();
+    private final Map<WorldKey, WorldTimeController> controllers = new ConcurrentHashMap<>();
 
     public void start(WorldKey key) {
-        if (controllers.containsKey(key)) return;
-
-        WorldTimeController controller = new WorldTimeController(context, key);
-        controller.start();
-
-        controllers.put(key, controller);
+        controllers.computeIfAbsent(key, this::startController);
     }
 
     public void stop(WorldKey key) {
-        WorldTimeController controller = controllers.get(key);
+        WorldTimeController controller = controllers.remove(key);
 
         if (controller == null) return;
 
@@ -62,5 +57,11 @@ public class WorldTimeManager {
         WorldTimeController controller = controllers.get(key);
         if (controller == null) return;
         controller.sleepingPlayers(sleepingPlayers);
+    }
+
+    private WorldTimeController startController(WorldKey key) {
+        WorldTimeController controller = new WorldTimeController(context, key);
+        controller.start();
+        return controller;
     }
 }

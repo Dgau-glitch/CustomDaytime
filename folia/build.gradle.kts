@@ -15,6 +15,8 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
+
 plugins {
     id("java")
     alias(libs.plugins.run.paper)
@@ -29,7 +31,7 @@ dependencies {
     implementation(libs.bstats.bukkit)
     implementation(libs.configurate.hocon)
 
-    compileOnly(libs.paper.api)
+    compileOnly(libs.folia.api)
     compileOnly(libs.gson)
 }
 
@@ -38,11 +40,11 @@ tasks {
     // Configure the Minecraft version for our task.
     // This is the only required configuration besides applying the plugin.
     // Your plugin's jar (or shadowJar if present) will be used automatically.
-    minecraftVersion("26.1.2")
+    minecraftVersion("1.21.11")
   }
 }
 
-val targetJavaVersion = 25
+val targetJavaVersion = 21
 java {
     val javaVersion = JavaVersion.toVersion(targetJavaVersion)
     sourceCompatibility = javaVersion
@@ -81,7 +83,7 @@ tasks {
     }
 
     shadowJar {
-        archiveBaseName.set("CustomDaytimePaper")
+        archiveBaseName.set("CustomDaytimeFolia")
         archiveClassifier.set("")
         relocate("org.bstats", "xyz.mayahive.libs.bstats")
         relocate("org.spongepowered.configurate", "xyz.mayahive.customdaytime.lib.configurate")
@@ -96,10 +98,10 @@ modrinth {
     versionNumber.set(version.toString())
     versionType.set("release")
     uploadFile.set(tasks.shadowJar)
-    gameVersions.addAll("26.1", "26.1.1", "26.1.2")
-    loaders.addAll("paper", "folia", "purpur")
+    gameVersions.addAll("1.21.11")
+    loaders.addAll("folia")
     syncBodyFrom = rootProject.file("README.md").readText()
-    changelog.set(System.getenv("CHANGELOG").takeUnless { it.isNullOrBlank() } ?: "No changelog provided")
+    changelog.set(System.getenv("CHANGELOG").takeUnless { it.isNullOrBlank() } ?: "Folia 1.21.11 compatibility release")
 }
 
 tasks.modrinth {
@@ -109,8 +111,13 @@ tasks.modrinth {
 paper {
     name = "CustomDaytime"
     author = "Seedim"
-    main = "xyz.mayahive.customdaytime.paper.CustomDaytimePaper"
-    apiVersion = "26.1.2"
+    main = "xyz.mayahive.customdaytime.folia.CustomDaytimeFolia"
+    apiVersion = "1.21.11"
     foliaSupported = true
     contributors = listOf("PureLove")
+
+    permissions.register("customdaytime.command.reload") {
+        description = "Allows reloading CustomDaytime configuration"
+        default = BukkitPluginDescription.Permission.Default.OP
+    }
 }
